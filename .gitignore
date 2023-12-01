@@ -1,0 +1,9 @@
+# Data files
+data/
+!data/README.md
+
+# Other
+pcmol.egg-info/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
