@@ -9,6 +9,7 @@ Multi-target generative model for de novo drug design that utilizes latent embed
 
 - Python 3.9+
 - rdkit 2021.03.5.0
+- AlphaFold2
 
 ## Installation
 
