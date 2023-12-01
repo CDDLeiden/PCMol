@@ -30,7 +30,3 @@ If available, the appropriate AlphaFold2 embeddings will be downloaded automatic
 ## List of supported targets
 
 The model currently depends on the availability of AlphaFold2 embeddings for the target protein. The list of supported targets can be found in the [data/targets.txt](data/targets.txt) file.
-
-## Paper
-
-The paper is available on [arXiv](https://arxiv.org/abs/2109.02019).
