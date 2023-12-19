@@ -7,6 +7,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 PAPYRUS_DIR = os.path.join(DATA_DIR, 'papyrus')
 MODEL_DIR = os.path.join(DATA_DIR, 'models')
+ALPHAFOLD_DIR = os.path.join(DATA_DIR, 'alphafold')
+
 
 ### Configs
 @dataclass
@@ -54,7 +56,6 @@ class EvaluatorConfig:
     """
     Configuration for the evaluator
     """
-    run_eval: bool = False
     dataset_path: str = os.path.join(PAPYRUS_DIR, 'filtered_w_features.tsv')
     train_ids = ['Q99685', 'P29274', 'P41597'] # For tracking train set metrics
     test_ids = ['Q9BXC1', 'Q13304', 'Q5U431']  # For tracking test set metrics
@@ -73,7 +74,7 @@ class RunnerConfig:
     dataset: DatasetConfig = DatasetConfig()
     trainer: TrainerConfig = TrainerConfig()
     evaluator: EvaluatorConfig = EvaluatorConfig()
-    model_dir: str = MODEL_DIR
+    model_dir: str = 'trained_models'
     model_id:  str = ''
     use_wandb: bool = False
 

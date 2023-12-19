@@ -1,4 +1,4 @@
-from pcmol.runner import Runner
+from pcmol.models.runner import Runner
 import os
 
 ## Suppress RDKit warnings
@@ -7,32 +7,36 @@ lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
 
-def check_existing(pid):
-    data_dir = '/home/andrius/datasets/output_l'
-    subdir = os.path.join(data_dir, pid)
-    smiles_out = os.path.join(subdir, f'{pid}.txt')
-    return os.path.exists(smiles_out)
+def generate(protein_id, model='XL', checkpoint=7, device='cuda', repeat=10):
+    trainer = Runner(model, checkpoint=checkpoint, device=device)
+    smiles, _ = trainer.targetted_generation(protein_id=protein_id, batch_size=1, repeat=repeat, verbose=True)
+    return smiles
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default='XL')
-    parser.add_argument('--device', type=int, default=0)
+    parser.add_argument('--device', type=str, default='cuda')
+    parser.add_argument('--device_id', type=int, default=0)
     parser.add_argument('--start', type=int, default=0)
     parser.add_argument('--end', type=int, default=-1)
-    parser.add_argument('--checkpoint', type=int, default=0)
+    parser.add_argument('--checkpoint', type=int, default=7)
     parser.add_argument('--file', type=str, default=None)
     parser.add_argument('--targets', type=str, default=None)
-    parser.add_argument('--repeat', type=int, default=4)
+    parser.add_argument('--repeat', type=int, default=10)
     args = parser.parse_args()
     import os
-    os.environ['CUDA_VISIBLE_DEVICES']=str(args.device)
+
+    if args.device == 'cuda':
+        os.environ['CUDA_VISIBLE_DEVICES']=str(args.device_id)
+    else:
+        os.environ['CUDA_VISIBLE_DEVICES']=''
 
     # main(model_num=args.model, start=args.start, end=args.end)
 
     import pandas as pd
 
-    trainer = Runner(model_id=args.model, checkpoint=args.checkpoint)
+    trainer = Runner(model_id=args.model, checkpoint=args.checkpoint, device=args.device)
 
     if args.file is None:
         papyrus = pd.read_csv('/home/andrius/datasets/final_augmented/unaugmented.tsv', sep='\t')
@@ -53,10 +57,8 @@ if __name__ == "__main__":
     os.makedirs(data_dir, exist_ok=True)
     for i, pid in enumerate(pids):
         print('\n', i, pid)
-        if check_existing(pid):
-            print('Output already exists')
-            continue
-        smiles, _ = trainer.targetted_generation(protein_id=pid, batch_size=1, repeat=args.repeat)
+
+        smiles, _ = trainer.targetted_generation(protein_id=pid, batch_size=1, repeat=args.repeat, verbose=True)
         # papyrus.loc[papyrus['target_id'] == pid, 'smiles'] = smiles
 
         subdir = os.path.join(data_dir, pid)

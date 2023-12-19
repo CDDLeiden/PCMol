@@ -16,7 +16,7 @@
 # peter ertl & greg landrum, september 2013
 #
 
-from alphagen.utils.parallel import parallel_apply
+from pcmol.utils.parallel import parallel_apply
 from rdkit.Chem.Crippen import MolLogP
 from rdkit.Chem.rdMolDescriptors import CalcNumHBA
 from rdkit.Chem.rdMolDescriptors import CalcNumHBD

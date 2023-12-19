@@ -11,7 +11,7 @@ from torch.utils.data import Dataset as TorchDataset
 from pcmol.config import DatasetConfig
 from pcmol.utils.smiles import generate_alternative_smiles
 import matplotlib.pyplot as plt
-
+from pcmol.config import ALPHAFOLD_DIR
 
 ## Voc and dataset
 def load_voc(dataset_config: DatasetConfig):
@@ -94,7 +94,7 @@ class ProteinDataset:
         self.lengths[protein_id] = n
         return output, embedding.shape
 
-    def load_protein_embeddings(self, protein_set=None, embedding_type='structure', scale=True):
+    def load_protein_embeddings(self, protein_set=None, embedding_type='structure', scale=True, recalc=False):
         """
         Loads all protein embeddings from the dataset directory
 
@@ -129,8 +129,14 @@ class ProteinDataset:
 
         concat = torch.cat(embs, dim=0)
         # Store embedding min/max values for scaling test set embeddings
-        emb_max = self.emb_max = torch.max(concat, dim=0)[0]
-        emb_min = self.emb_min = torch.min(concat, dim=0)[0]
+        if recalc:
+            emb_max = self.emb_max = torch.max(concat, dim=0)[0]
+            emb_min = self.emb_min = torch.min(concat, dim=0)[0]
+        else:
+            emb_min = np.load(os.path.join(ALPHAFOLD_DIR, 'emb_min.npy'))
+            emb_max = np.load(os.path.join(ALPHAFOLD_DIR, 'emb_max.npy'))
+            self.emb_min = emb_min
+            self.emb_max = emb_max
 
         ## Scale embeddings
         if scale:
@@ -156,14 +162,18 @@ class ProteinSmilesDataset(TorchDataset):
     """
 
     def __init__(self, alphafold_embedding_dir, dataset_file, voc_smiles, 
-                 pre_load=False, protein_set=None, **kwargs):
+                 pre_load=False, protein_set=None, train=False, **kwargs):
         
         self.proteins = ProteinDataset(alphafold_embedding_dir, 
                                        pre_load=pre_load, 
                                        protein_set=protein_set,
                                        **kwargs)
         self.voc_smiles = voc_smiles
-        self.tsv_dataset = self.read_dataset(dataset_file)
+        if train:
+            self.tsv_dataset = self.read_dataset(dataset_file)
+            print(f'Dataset: len: {len(self)}')
+        else:
+            self.tsv_dataset = None
         self.dataframe = read_dataset(dataset_file)
         self.encoded_smiles = []
         self.error_count = 0
@@ -172,7 +182,6 @@ class ProteinSmilesDataset(TorchDataset):
         self.pre_load = pre_load
         # if pre_load:
         #     self.encode_smiles()
-        print(f'Dataset: len: {len(self)}')
 
     def encode_smiles(self):
         """
@@ -287,6 +296,7 @@ class Ligand:
     def __repr__(self) -> str:
         return f'{self.target} L={len(self)} | {self.pchembl}'
     
+    
 def read_dataset(path):
     """
     Reads the dataset and returns a list of strings with the following format
@@ -319,11 +329,10 @@ def augment_ligands(ligand_list, num_augmentations, weighted_sampling=True, r=1.
         # Sample smiles to be augmented uniformly
         sampled = random.choices(ligand_list, k=num_augmentations)
 
-
     for i, ligand in enumerate(ligand_list):
         n_alternatives = sampled.count(ligand)
         alt_smiles = generate_alternative_smiles(ligand.string, n_alternatives=n_alternatives, 
-                                                n_attempts=int(n_alternatives*4))
+                                                 n_attempts=int(n_alternatives*4))
         augmented += [Ligand(smiles, ligand.target, ligand.pchembl) for smiles in alt_smiles]
     return augmented
 

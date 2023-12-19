@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from pcmol.utils.dataset import load_dataset, load_voc
 from pcmol.config import RunnerConfig, load_config, save_config, MODEL_DIR
 from pcmol.utils.evaluate import Evaluator
+from pcmol.utils.downloader import download_protein_data
 
 ## Suppress RDKit warnings
 from rdkit import RDLogger
@@ -26,7 +27,7 @@ warnings.filterwarnings("ignore")
 class Runner:
 
     def __init__(self, config: RunnerConfig=None, model_id: str=None, 
-                 checkpoint: int=0, load: bool=False) -> None:
+                 checkpoint: int=0, load: bool=False, device: str='cuda') -> None:
 
         if model_id is not None:
             # base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -40,6 +41,7 @@ class Runner:
                 config = self.config = load_config(config_path)
                 config.model_dir = model_dir
         self.config = config
+        self.config.trainer.dev = torch.device(device)
 
         # Model ID
         model_dir = MODEL_DIR
@@ -52,7 +54,7 @@ class Runner:
 
         self.voc = load_voc(config.dataset)
         self.dataset = load_dataset(config.dataset, pre_load=True)
-        self.model = AF2SmilesTransformer(self.voc, **config.model.__dict__)
+        self.model = AF2SmilesTransformer(self.voc, **config.model.__dict__, dev=device)
         self.evaluator = Evaluator(self,
                                    config.evaluator,
                                    use_wandb=config.use_wandb)
@@ -185,12 +187,23 @@ class Runner:
                     self.save_model(timestamp=True)
             self.save_model(checkpoint=True)
 
-    def targetted_generation(self, protein_id, repeat=1, batch_size=16):
+    def targetted_generation(self, protein_id, repeat=1, batch_size=16, verbose=False):
         """
         Generates smiles for a target pid
         """
         dev = self.config.trainer.dev
         net = torch.nn.DataParallel(self.model)
+
+        try:
+            self.dataset.proteins.embeddings[protein_id]
+        except:
+            status = download_protein_data(protein_id)
+            if status:
+                self.dataset = load_dataset(self.config.dataset, pre_load=True)
+            else:
+                print('Protein embeddings not found...')
+        
+
         protein_embedding = self.dataset.proteins.embeddings[protein_id]
         protein_embedding = protein_embedding.unsqueeze(0).repeat(
             batch_size, 1, 1).to(dev)
@@ -199,7 +212,7 @@ class Runner:
 
         smiles_list = []
         with torch.no_grad():
-            for i in tqdm(range(repeat), desc='Generating SMILES', ncols=repeat):
+            for i in tqdm(range(repeat)):
                 # print(f'Generating SMILES {(i+1)*batch_size}/{repeat*batch_size}', end='\r')
 
                 predictions, _ = net(x, af_emb=protein_embedding, train=False)
@@ -209,6 +222,16 @@ class Runner:
                     smiles_list += [smile]
 
             scores = check_smiles(smiles_list)
+
+        # Print a summary of the results
+        if verbose:
+            print(f'Valid smiles: {scores.sum()} / {len(scores)}')
+            print(f'Unique smiles: {len(set(smiles_list))} / {len(smiles_list)}')
+
+            print('Valid smiles:\n')
+            for smile in smiles_list:
+                if check_smiles([smile])[0] == 1:
+                    print(smile)
 
         return smiles_list, scores.sum() / batch_size * repeat
 

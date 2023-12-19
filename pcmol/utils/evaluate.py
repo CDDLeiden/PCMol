@@ -96,8 +96,8 @@ class Evaluator:
         Loads a dataset from a CSV file, converts SMILES to canonical SMILES
         and creates a hash column for faster lookup
         """
-        if not self.config.run_eval:
-            return None
+        # if not self.config.run_eval:
+        return None
         print(f'Loading evaluation dataset from {path}...')
         df = pd.read_csv(path, sep='\t')
         ## Create hash column for faster lookup
