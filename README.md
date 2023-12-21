@@ -61,6 +61,8 @@ To retrain the model you first need to download the dataset from [here]().
 python pcmol/train.py --model default
 ```
 
+---
+
 ## Paper & Authors
 
 To be added.
