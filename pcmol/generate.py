@@ -7,10 +7,15 @@ lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
 
-def generate(protein_id, model='XL', checkpoint=7, device='cuda', repeat=10):
-    trainer = Runner(model, checkpoint=checkpoint, device=device)
-    smiles, _ = trainer.targetted_generation(protein_id=protein_id, batch_size=1, repeat=repeat, verbose=True)
-    return smiles
+class Generator(Runner):
+    pass
+
+
+
+# def generate(protein_id, model='XL', checkpoint=7, device='cuda', repeat=10):
+#     trainer = Runner(model, checkpoint=checkpoint, device=device)
+#     smiles, _ = trainer.targetted_generation(protein_id=protein_id, batch_size=1, repeat=repeat, verbose=True)
+#     return smiles
 
 if __name__ == "__main__":
     import argparse
