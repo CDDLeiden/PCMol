@@ -60,9 +60,6 @@ if __name__ == "__main__":
                 with open(args.targets, 'r') as f:
                     pids = f.read().splitlines()
     
-
-    data_dir = f'/home/andrius/alphagen/data/outputs/output_{args.model}'
-    os.makedirs(data_dir, exist_ok=True)
     for i, pid in enumerate(pids):
         print('\n', i, pid)
 
