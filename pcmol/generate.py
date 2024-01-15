@@ -1,5 +1,6 @@
 from pcmol.models.runner import Runner
 import os
+from pcmol.config import dirs
 
 ## Suppress RDKit warnings
 from rdkit import RDLogger
@@ -43,20 +44,22 @@ if __name__ == "__main__":
 
     trainer = Runner(model_id=args.model, checkpoint=args.checkpoint, device=args.device)
 
-    if args.file is None:
-        papyrus = pd.read_csv('/home/andrius/datasets/final_augmented/unaugmented.tsv', sep='\t')
-        pids = papyrus['target_id'].unique()
-        pids = pids[args.start:args.end]
-    else:
-        if args.targets.endswith('.tsv') or args.targets.endswith('.csv'):
-            papyrus = pd.read_csv(args.targets, sep='\t')
-            pids = papyrus['target_id'].unique()
-        else:
-            with open(args.targets, 'r') as f:
-                pids = f.read().splitlines()
-    
     if args.targets is not None:
         pids = [args.targets]
+    else:
+        if args.file is None:
+            path = os.path.join(dirs.DATA_DIR, 'final_augmented', 'unaugmented.tsv')
+            papyrus = pd.read_csv(path, sep='\t')
+            pids = papyrus['target_id'].unique()
+            pids = pids[args.start:args.end]
+        else:
+            if args.targets.endswith('.tsv') or args.targets.endswith('.csv'):
+                papyrus = pd.read_csv(args.targets, sep='\t')
+                pids = papyrus['target_id'].unique()
+            else:
+                with open(args.targets, 'r') as f:
+                    pids = f.read().splitlines()
+    
 
     data_dir = f'/home/andrius/alphagen/data/outputs/output_{args.model}'
     os.makedirs(data_dir, exist_ok=True)
