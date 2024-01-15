@@ -10,7 +10,7 @@ from pcmol.models import AF2SmilesTransformer, count_parameters
 from pcmol.utils.smiles import check_smiles
 from torch.utils.data import DataLoader
 from pcmol.utils.dataset import load_dataset, load_voc
-from pcmol.config import RunnerConfig, load_config, save_config, MODEL_DIR
+from pcmol.config import RunnerConfig, load_config, save_config, dirs
 from pcmol.utils.evaluate import Evaluator
 from pcmol.utils.downloader import download_protein_data
 
@@ -31,7 +31,7 @@ class Runner:
 
         if model_id is not None:
             # base_dir = os.path.dirname(os.path.abspath(__file__))
-            model_dir = os.path.join(MODEL_DIR, str(model_id))
+            model_dir = os.path.join(dirs.MODEL_DIR, str(model_id))
             print(model_dir)
             if not os.path.exists(model_dir):
                 self.id = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -44,7 +44,7 @@ class Runner:
         self.config.trainer.dev = torch.device(device)
 
         # Model ID
-        model_dir = MODEL_DIR
+        model_dir = dirs.MODEL_DIR
         self.timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         self.model_id = str(model_id) + str(self.timestamp)
         self.parent_model = model_id
@@ -53,7 +53,7 @@ class Runner:
         self.config.model_id = self.model_id
 
         self.voc = load_voc(config.dataset)
-        self.dataset = load_dataset(config.dataset, pre_load=True)
+        self.dataset = load_dataset(config.dataset, pre_load=False)
         self.model = AF2SmilesTransformer(self.voc, **config.model.__dict__, dev=device)
         self.evaluator = Evaluator(self,
                                    config.evaluator,
@@ -61,7 +61,7 @@ class Runner:
         self.checkpoint = checkpoint
 
         if load:
-            weights_file = os.path.join(MODEL_DIR, model_id,
+            weights_file = os.path.join(dirs.MODEL_DIR, model_id,
                                         f'model_{self.checkpoint}.pkg')
             self.model.load_state_dict(
                 torch.load(weights_file, map_location=self.config.trainer.dev))
@@ -187,34 +187,36 @@ class Runner:
                     self.save_model(timestamp=True)
             self.save_model(checkpoint=True)
 
-    def targetted_generation(self, protein_id, repeat=1, batch_size=16, verbose=False):
+    def targetted_generation(self, protein_id, repeat=1, batch_size=16, verbose=False, dev=None):
         """
         Generates smiles for a target pid
         """
-        dev = self.config.trainer.dev
+        dev = self.config.trainer.dev if dev is None else dev
         net = torch.nn.DataParallel(self.model)
 
         try:
-            self.dataset.proteins.embeddings[protein_id]
+            ## Check if directory exists
+            path = os.path.join(self.config.dataset.alphafold_dir, protein_id)
+            if not os.path.exists(path):
+                # pass
+                status = download_protein_data(protein_id)
+                if not status:
+                    print('Protein embeddings not found...')
+                    return None, None
+            self.dataset = load_dataset(self.config.dataset, pre_load=True)
         except:
-            status = download_protein_data(protein_id)
-            if status:
-                self.dataset = load_dataset(self.config.dataset, pre_load=True)
-            else:
                 print('Protein embeddings not found...')
         
 
         protein_embedding = self.dataset.proteins.embeddings[protein_id]
-        protein_embedding = protein_embedding.unsqueeze(0).repeat(
-            batch_size, 1, 1).to(dev)
+        protein_embedding = protein_embedding.unsqueeze(0).repeat(batch_size, 1, 1).to(dev)
 
         x = torch.LongTensor([[self.voc.tk2ix['GO']]] * batch_size).to(dev)
 
+        print(f'{"*"*80}\nGenerating smiles for target {protein_id}...')
         smiles_list = []
         with torch.no_grad():
             for i in tqdm(range(repeat)):
-                # print(f'Generating SMILES {(i+1)*batch_size}/{repeat*batch_size}', end='\r')
-
                 predictions, _ = net(x, af_emb=protein_embedding, train=False)
                 smiles = predictions.cpu().numpy()
                 for i in range(batch_size):
@@ -228,10 +230,15 @@ class Runner:
             print(f'Valid smiles: {scores.sum()} / {len(scores)}')
             print(f'Unique smiles: {len(set(smiles_list))} / {len(smiles_list)}')
 
-            print('Valid smiles:\n')
-            for smile in smiles_list:
-                if check_smiles([smile])[0] == 1:
-                    print(smile)
+        ## Save results
+        result_df = self.evaluator.evaluate(smiles_list, protein_id, calc_molprops=True)
+
+        ## Save dataframe
+        path = os.path.join(dirs.RESULTS_DIR, self.model_id)
+        os.makedirs(path, exist_ok=True)
+        result_df.to_csv(os.path.join(path, f'results_{protein_id}.csv'))
+        print(f'\nSaved results to {path}')
+        print(result_df.head(repeat*batch_size))
 
         return smiles_list, scores.sum() / batch_size * repeat
 

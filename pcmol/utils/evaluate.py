@@ -84,7 +84,7 @@ class Evaluator:
     def __init__(self, model_runner, config: EvaluatorConfig, use_wandb: bool=False):
         self.config = config
         self.standardizer = PapyrusStandardizer()
-        self.dataset = self.load_set(config.dataset_path) # Training set with fingerprints, index is canonical SMILES
+        self.dataset = self.load_set(config.eval_dataset_path) # Training set with fingerprints, index is canonical SMILES
         self.model_runner = model_runner
         self.eval_dir = os.path.join(self.model_runner.config.model_dir, 'evals')
         self.use_wandb = use_wandb
@@ -132,17 +132,24 @@ class Evaluator:
         return Chem.CanonSmiles(smiles)
         
     def evaluate(self, list_of_smiles: list, target: str, superset: list=None,
-                 calc_similarity: bool=False, metric: str='tanimoto', calc_molprops: bool=False):
+                 calc_similarity: bool=False, metric: str='tanimoto', calc_molprops: bool=False,
+                 train_mode=False):
         """
         Evaluate a list of SMILES strings
 
         Arguments:
             list_of_smiles (list)     : list of SMILES strings
             superset (list)           : list of SMILES strings to compare against (e.g. generated for other targets)
+            calc_similarity (bool)    : whether to calculate similarity to a target
+            metric (str)              : similarity metric (tanimoto or dice)
+            calc_molprops (bool)      : whether to calculate molecule properties
+            train_mode (bool)         : whether to save the evaluation results
+
+        Returns:
+            result_df (pd.DataFrame)  : dataframe with evaluation results
         """
-        if not self.config.run_eval:
-            return None
-        os.makedirs(self.eval_dir, exist_ok=True)
+        if train_mode:
+            os.makedirs(self.eval_dir, exist_ok=True)
             
         print(f'    Evaluating {len(list_of_smiles)} SMILES strings...')
         result_df = pd.DataFrame(index=list_of_smiles)
@@ -150,7 +157,7 @@ class Evaluator:
         # result_df['SMILES'] = list_of_smiles
         dataset = self.dataset
         
-        assert target in dataset.target_id.unique(), 'Invalid target'
+        # assert target in dataset.target_id.unique(), 'Invalid target'
 
         if target in self.config.train_ids:
             result_df['train'] = [1 for _ in list_of_smiles]
@@ -174,31 +181,34 @@ class Evaluator:
         if superset is not None:
             result_df['unique_overall'] = [smi not in superset for smi in list_of_smiles]
 
-        ## Novelty
-        result_df['novel_overall'] = [not self.contained_in(smi, dataset) for smi in list_of_smiles]
-        if target is not None:
-            result_df['novel'] = [not self.contained_in(smi, dataset[dataset.target_id==target]) for smi in list_of_smiles]
-
-        # Similarity
-        if calc_similarity:
-            target_smiles = dataset[dataset.target_id==target].SMILES.tolist()
-            target_fps = dataset[dataset.target_id==target].ECFP6.tolist()
-            similarity = bulk_similarity(
-                list_of_smiles, 
-                target_smiles=target_smiles, 
-                target_fps=target_fps, 
-                metric=metric)
-            
-            result_df['similarity_mean'] = similarity.mean(axis=1)
-            result_df['similarity_std'] = similarity.std(axis=1)
-            result_df['similarity_max'] = similarity.max(axis=1)
-            result_df['similarity_min'] = similarity.min(axis=1)
-
         ## Molecule properties
         props = ['logP', 'MW', 'HBA', 'HBD', 'qed', 'tpsa', 'rotatable_bonds', 'aromatic_rings', 'num_rings', 'heavy_atoms']
         if calc_molprops:
             for prop in props:
                 result_df[prop] = calculate_property(list_of_smiles, prop)
+        
+        ## If the evaluation dataset is not available, skip the rest
+        if self.config.run_eval:
+            ## Novelty
+            result_df['novel_overall'] = [not self.contained_in(smi, dataset) for smi in list_of_smiles]
+            if target is not None:
+                result_df['novel'] = [not self.contained_in(smi, dataset[dataset.target_id==target]) for smi in list_of_smiles]
+
+            # Similarity
+            if calc_similarity:
+                target_smiles = dataset[dataset.target_id==target].SMILES.tolist()
+                target_fps = dataset[dataset.target_id==target].ECFP6.tolist()
+                similarity = bulk_similarity(
+                    list_of_smiles, 
+                    target_smiles=target_smiles, 
+                    target_fps=target_fps, 
+                    metric=metric)
+                
+                result_df['similarity_mean'] = similarity.mean(axis=1)
+                result_df['similarity_std'] = similarity.std(axis=1)
+                result_df['similarity_max'] = similarity.max(axis=1)
+                result_df['similarity_min'] = similarity.min(axis=1)
+
         return result_df
 
     def contained_in(self, smiles, df):

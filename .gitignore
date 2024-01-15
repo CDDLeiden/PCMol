@@ -1,6 +1,10 @@
 # Data files
 data/
 !data/README.md
+!data/results
+!data/models/.gitkeep
+!data/alphafold/emb_max.npy
+!data/alphafold/emb_min.npy
 
 # Other
 pcmol.egg-info/

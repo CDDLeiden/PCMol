@@ -63,13 +63,4 @@ if __name__ == "__main__":
     for i, pid in enumerate(pids):
         print('\n', i, pid)
 
-        smiles, _ = trainer.targetted_generation(protein_id=pid, batch_size=1, repeat=args.repeat, verbose=True)
-        # papyrus.loc[papyrus['target_id'] == pid, 'smiles'] = smiles
-
-        subdir = os.path.join(data_dir, pid)
-        os.makedirs(subdir, exist_ok=True)
-        smiles_out = os.path.join(subdir, f'{pid}.txt')
-        
-        ## Write smiles as a text file
-        with open(smiles_out, 'a') as f:
-            f.write("\n".join(smiles))
+        smiles_df, _ = trainer.targetted_generation(protein_id=pid, batch_size=1, repeat=args.repeat, verbose=True, dev=args.device)

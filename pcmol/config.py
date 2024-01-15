@@ -3,11 +3,13 @@ import yaml
 import torch
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, 'data')
-PAPYRUS_DIR = os.path.join(DATA_DIR, 'papyrus')
-MODEL_DIR = os.path.join(DATA_DIR, 'models')
-ALPHAFOLD_DIR = os.path.join(DATA_DIR, 'alphafold')
+class dirs:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    DATA_DIR = os.path.join(BASE_DIR, 'data')
+    PAPYRUS_DIR = os.path.join(DATA_DIR, 'papyrus')
+    MODEL_DIR = os.path.join(DATA_DIR, 'models')
+    ALPHAFOLD_DIR = os.path.join(DATA_DIR, 'alphafold')
+    RESULTS_DIR = os.path.join(DATA_DIR, 'results')
 
 
 ### Configs
@@ -43,9 +45,9 @@ class TrainerConfig:
 
 @dataclass
 class DatasetConfig:
-    dataset_dir   : str = os.path.join(DATA_DIR, 'training')
+    dataset_dir   : str = os.path.join(dirs.DATA_DIR, 'training')
     dataset_prefix: str = 'aug_10_no_orphans' #'final_augmented'
-    alphafold_dir:  str = os.path.join(DATA_DIR, 'alphafold')
+    alphafold_dir:  str = os.path.join(dirs.DATA_DIR, 'alphafold')
     max_smiles_len: int = 102
     embedding_size: int = 1536
     embedding_type: str = 'structure'
@@ -56,13 +58,14 @@ class EvaluatorConfig:
     """
     Configuration for the evaluator
     """
-    dataset_path: str = os.path.join(PAPYRUS_DIR, 'filtered_w_features.tsv')
+    eval_dataset_path: str = os.path.join(dirs.PAPYRUS_DIR, 'filtered_w_features.tsv')
     train_ids = ['Q99685', 'P29274', 'P41597'] # For tracking train set metrics
     test_ids = ['Q9BXC1', 'Q13304', 'Q5U431']  # For tracking test set metrics
     wandb_logging: bool = True
     batch_size: int = 16
     budget: int = 5
     canonize: bool = False # Whether to canonize SMILES strings in the eval dataset before evaluation
+    run_eval: bool = False # Whether to run evaluation after each training epoch
 
 
 @dataclass

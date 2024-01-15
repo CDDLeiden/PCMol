@@ -3,7 +3,7 @@ from re import S
 from urllib import request
 import zipfile
 import argparse
-from pcmol.config import ALPHAFOLD_DIR
+from pcmol.config import dirs
 
 
 DATASET_URL_LITE = f'https://surfdrive.surf.nl/files/index.php/s/fE7hpHbd0LJZu6h/download?path=%2F'
@@ -13,7 +13,7 @@ DATASET_URL_FULL = f'https://surfdrive.surf.nl/files/index.php/s/P8XXnoGonUCMLSr
 def download_protein_data(pid, full_data=False, unzip=True, status='', data_url=None):
     """Downloads the processed protein sequence from online storage"""
 
-    print(f'{status} Downloading AlphaFold embeddings for {pid} to <{ALPHAFOLD_DIR}>...')
+    print(f'{status} Downloading AlphaFold embeddings for {pid} to <{dirs.ALPHAFOLD_DIR}>...')
 
     if data_url is None:
         url = DATASET_URL_FULL if full_data else DATASET_URL_LITE
@@ -46,7 +46,7 @@ def unzip_file(filename, remove_original=True):
     """Unzips a file"""
 
     with zipfile.ZipFile(filename, 'r') as zip_ref:
-        target_dir = os.path.join(ALPHAFOLD_DIR, filename.split('.')[0])
+        target_dir = os.path.join(dirs.ALPHAFOLD_DIR, filename.split('.')[0])
         os.makedirs(target_dir, exist_ok=True)
         zip_ref.extractall(target_dir)
     if remove_original:
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         else:
             subset_name = args.subset
             
-        ALPHAFOLD_DIR = os.path.join(ALPHAFOLD_DIR, subset_name)
+        ALPHAFOLD_DIR = os.path.join(dirs.ALPHAFOLD_DIR, subset_name)
 
         os.makedirs(ALPHAFOLD_DIR, exist_ok=True)
         unavailable, processed = [], 0

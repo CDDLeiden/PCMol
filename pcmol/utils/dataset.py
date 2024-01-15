@@ -11,7 +11,7 @@ from torch.utils.data import Dataset as TorchDataset
 from pcmol.config import DatasetConfig
 from pcmol.utils.smiles import generate_alternative_smiles
 import matplotlib.pyplot as plt
-from pcmol.config import ALPHAFOLD_DIR
+from pcmol.config import dirs
 
 ## Voc and dataset
 def load_voc(dataset_config: DatasetConfig):
@@ -59,6 +59,7 @@ class ProteinDataset:
         protein_set (str): Path to a file containing a list of protein ids to load (optional)
         embedding_type (str): Type of embedding to load (default: 'single', options: 'single', 'structure')
         embedding_size (int): Size of the embedding (default: 1024)
+        pre_load (bool): Whether to pre-load all embeddings into memory (default: False)
     """
 
     def __init__(self, alphafold_embedding_dir, embedding_type='single',
@@ -80,6 +81,14 @@ class ProteinDataset:
     def get_protein_embedding(self, protein_id, embedding_type='structure'):
         """
         Returns a torch tensor of the target protein 
+
+        Args:
+            protein_id (str): Protein id
+            embedding_type (str): Type of embedding to load (default: 'single', options: 'single', 'structure')
+
+        Returns:
+            embedding (torch.Tensor): Protein embedding
+            shape (tuple): Shape of the embedding
         """
         protein_dir = os.path.join(self.alphafold_embedding_dir, protein_id)
         embedding_file = os.path.join(protein_dir, f'{embedding_type}.npy')
@@ -102,6 +111,7 @@ class ProteinDataset:
             protein_set (str): Path to a file containing a list of protein ids to load (optional)
             embedding_type (str): Type of embedding to load (default: 'single', options: 'single', 'structure')
             scale (bool): Whether to scale the embeddings in the range [-1, 1] (default: True)
+            recalc (bool): Whether to recalculate the min/max values for scaling (default: False)
 
         Returns:
             protein_dict (dict): Dictionary of protein embeddings accessible via protein_id
@@ -133,8 +143,8 @@ class ProteinDataset:
             emb_max = self.emb_max = torch.max(concat, dim=0)[0]
             emb_min = self.emb_min = torch.min(concat, dim=0)[0]
         else:
-            emb_min = np.load(os.path.join(ALPHAFOLD_DIR, 'emb_min.npy'))
-            emb_max = np.load(os.path.join(ALPHAFOLD_DIR, 'emb_max.npy'))
+            emb_min = np.load(os.path.join(dirs.ALPHAFOLD_DIR, 'emb_min.npy'))
+            emb_max = np.load(os.path.join(dirs.ALPHAFOLD_DIR, 'emb_max.npy'))
             self.emb_min = emb_min
             self.emb_max = emb_max
 
