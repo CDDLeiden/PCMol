@@ -84,7 +84,7 @@ class Runner:
         print(f'Loaded model {model_id}, parameter count: {param_count} \
               \nModel directory: {config.model_dir}, checkpoint: {checkpoint}')
 
-    def save_model(self, checkpoint: bool = False, timestamp: bool = False):
+    def save_model(self, checkpoint: bool=False, timestamp: bool=False):
         """ 
         Saves the model and config to a file 
         """
@@ -98,7 +98,7 @@ class Runner:
         torch.save(self.model.state_dict(), path)
         self.config.save()
 
-    def train(self, epochs: int = -1):
+    def train(self, epochs: int=-1):
         """
         Training loop for the model
         Everything is configured in the config file pcmol/config.py
