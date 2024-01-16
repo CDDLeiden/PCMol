@@ -1,6 +1,7 @@
-from pcmol.models.runner import Runner
 import os
+from pcmol.models.runner import Runner
 from pcmol.config import dirs
+import pandas as pd
 
 ## Suppress RDKit warnings
 from rdkit import RDLogger
@@ -8,39 +9,35 @@ lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
 
-class Generator(Runner):
-    pass
-
-
-
-# def generate(protein_id, model='XL', checkpoint=7, device='cuda', repeat=10):
-#     trainer = Runner(model, checkpoint=checkpoint, device=device)
-#     smiles, _ = trainer.targetted_generation(protein_id=protein_id, batch_size=1, repeat=repeat, verbose=True)
-#     return smiles
-
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default='XL')
-    parser.add_argument('--device', type=str, default='cuda')
-    parser.add_argument('--device_id', type=int, default=0)
-    parser.add_argument('--start', type=int, default=0)
-    parser.add_argument('--end', type=int, default=-1)
-    parser.add_argument('--checkpoint', type=int, default=7)
-    parser.add_argument('--file', type=str, default=None)
-    parser.add_argument('--targets', type=str, default=None)
-    parser.add_argument('--repeat', type=int, default=10)
+    parser.add_argument('--device', type=str, default='cuda', choices=['cuda', 'cpu'], 
+                        help='Device to run on, cuda or cpu')
+    parser.add_argument('--device_id', type=int, default=0,
+                        help='CUDA device ID')
+    parser.add_argument('--start', type=int, default=0, 
+                        help='Start index for protein IDs')
+    parser.add_argument('--end', type=int, default=-1, 
+                        help='End index for protein IDs')
+    parser.add_argument('--checkpoint', type=int, default=7, 
+                        help='Checkpoint number of the model file')
+    parser.add_argument('--file', type=str, default=None, 
+                        help='TSV file with target IDs in the first column')
+    parser.add_argument('--targets', type=str, default=None, 
+                        help='TSV file with target IDs in the first column')
+    parser.add_argument('--batch_size', type=int, default=1, 
+                        help='Batch size for generation')
+    parser.add_argument('--repeats', type=int, default=10, 
+                        help='Number of times to repeat generation. \
+                        Total number of samples is repeats*batch_size.')
     args = parser.parse_args()
-    import os
 
     if args.device == 'cuda':
         os.environ['CUDA_VISIBLE_DEVICES']=str(args.device_id)
     else:
         os.environ['CUDA_VISIBLE_DEVICES']=''
-
-    # main(model_num=args.model, start=args.start, end=args.end)
-
-    import pandas as pd
 
     trainer = Runner(model_id=args.model, checkpoint=args.checkpoint, device=args.device)
 
@@ -48,8 +45,8 @@ if __name__ == "__main__":
         pids = [args.targets]
     else:
         if args.file is None:
-            path = os.path.join(dirs.DATA_DIR, 'final_augmented', 'unaugmented.tsv')
-            papyrus = pd.read_csv(path, sep='\t')
+            dataset_path = os.path.join(dirs.DATA_DIR, 'final_augmented', 'unaugmented.tsv')
+            papyrus = pd.read_csv(dataset_path, sep='\t')
             pids = papyrus['target_id'].unique()
             pids = pids[args.start:args.end]
         else:

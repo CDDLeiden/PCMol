@@ -19,6 +19,6 @@ if __name__ == "__main__":
     if args.use_wandb: 
         wandb.init(project=args.project, entity="cdd-leiden")
         wandb.watch(runner.model)
-        wandb.config = save_config(runner)
+        wandb.config = runner.config.save()
 
     runner.train()

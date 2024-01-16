@@ -3,15 +3,23 @@ import yaml
 import torch
 import os
 
+"""
+This file contains the configuration for the model, dataset, trainer and evaluator
+The RunnerConfig class contains all the other configs and can be used to save and load configs
+"""
+
 class dirs:
+    """
+    Contains the paths to the data directories
+    """
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATA_DIR = os.path.join(BASE_DIR, 'data')
-    PAPYRUS_DIR = os.path.join(DATA_DIR, 'papyrus')
-    MODEL_DIR = os.path.join(DATA_DIR, 'models')
+    PAPYRUS_DIR   = os.path.join(DATA_DIR, 'papyrus')
+    MODEL_DIR     = os.path.join(DATA_DIR, 'models')
     ALPHAFOLD_DIR = os.path.join(DATA_DIR, 'alphafold')
-    RESULTS_DIR = os.path.join(DATA_DIR, 'results')
+    RESULTS_DIR   = os.path.join(DATA_DIR, 'results')
 
-
+###########
 ### Configs
 @dataclass
 class ModelConfig:
@@ -47,7 +55,7 @@ class TrainerConfig:
 class DatasetConfig:
     dataset_dir   : str = os.path.join(dirs.DATA_DIR, 'training')
     dataset_prefix: str = 'aug_10_no_orphans' #'final_augmented'
-    alphafold_dir:  str = os.path.join(dirs.DATA_DIR, 'alphafold')
+    alphafold_dir : str = os.path.join(dirs.DATA_DIR, 'alphafold')
     max_smiles_len: int = 102
     embedding_size: int = 1536
     embedding_type: str = 'structure'
@@ -60,10 +68,10 @@ class EvaluatorConfig:
     """
     eval_dataset_path: str = os.path.join(dirs.PAPYRUS_DIR, 'filtered_w_features.tsv')
     train_ids = ['Q99685', 'P29274', 'P41597'] # For tracking train set metrics
-    test_ids = ['Q9BXC1', 'Q13304', 'Q5U431']  # For tracking test set metrics
+    test_ids  = ['Q9BXC1', 'Q13304', 'Q5U431']  # For tracking test set metrics
     wandb_logging: bool = True
     batch_size: int = 16
-    budget: int = 5
+    budget    : int = 5
     canonize: bool = False # Whether to canonize SMILES strings in the eval dataset before evaluation
     run_eval: bool = False # Whether to run evaluation after each training epoch
 
@@ -72,6 +80,9 @@ class EvaluatorConfig:
 class RunnerConfig:
     """ 
     Main configuration for the runner
+    Contains the model, dataset, trainer and evaluator configs
+    Saves the config to a .yaml file
+    Can load a config from a .yaml file
     """
     model:   ModelConfig   = ModelConfig()
     dataset: DatasetConfig = DatasetConfig()
@@ -81,33 +92,37 @@ class RunnerConfig:
     model_id:  str = ''
     use_wandb: bool = False
 
+    @staticmethod
+    def load(config_file_path: str):
+        """
+        Loads a config from a .yaml file and returns a RunnerConfig object
+        """
+        ## Check if file exists
+        if not os.path.exists(config_file_path):
+            raise FileNotFoundError(f'File {config_file_path} not found')
 
-def load_config(config_file_path: str):
-    """
-    Loads a config from a .yaml file and returns a RunnerConfig object
-    """
-    with open(config_file_path, 'r') as f:
-        config_dict = yaml.load(f, Loader=yaml.FullLoader)
+        with open(config_file_path, 'r') as f:
+            config_dict = yaml.load(f, Loader=yaml.FullLoader)
 
-    config = RunnerConfig(
-        model=ModelConfig(**config_dict['model']),
-        dataset=DatasetConfig(**config_dict['dataset']),
-        trainer=TrainerConfig(**config_dict['trainer']),
-        evaluator=EvaluatorConfig(**config_dict['evaluator']))
-    
-    return config
+        config = RunnerConfig(
+            model=ModelConfig(**config_dict['model']),
+            dataset=DatasetConfig(**config_dict['dataset']),
+            trainer=TrainerConfig(**config_dict['trainer']),
+            evaluator=EvaluatorConfig(**config_dict['evaluator']))
+        
+        return config
 
-def save_config(runner):
-    """
-    Saves the config of the runner to a .yaml file
-    """
-    config_dict = dict(
-        model   = runner.config.model.__dict__,
-        dataset = runner.config.dataset.__dict__,
-        trainer = runner.config.trainer.__dict__,
-        evaluator = runner.config.evaluator.__dict__)
+    def save(self):
+        """
+        Saves the config of the runner to a .yaml file
+        """
+        config_dict = dict(
+            model   = self.model.__dict__,
+            dataset = self.dataset.__dict__,
+            trainer = self.trainer.__dict__,
+            evaluator = self.evaluator.__dict__)
 
-    with open(f'{runner.config.model_dir}/config.yaml', 'w') as f:
-        yaml.dump(config_dict, f)
+        with open(f'{self.model_dir}/config.yaml', 'w') as f:
+            yaml.dump(config_dict, f)
 
-    return config_dict
+        return config_dict

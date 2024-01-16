@@ -6,11 +6,11 @@ import datetime
 import numpy as np
 from tqdm import tqdm
 from torch import nn
+from torch.utils.data import DataLoader
 from pcmol.models import AF2SmilesTransformer, count_parameters
 from pcmol.utils.smiles import check_smiles
-from torch.utils.data import DataLoader
 from pcmol.utils.dataset import load_dataset, load_voc
-from pcmol.config import RunnerConfig, load_config, save_config, dirs
+from pcmol.config import RunnerConfig, dirs
 from pcmol.utils.evaluate import Evaluator
 from pcmol.utils.downloader import download_protein_data
 
@@ -25,50 +25,57 @@ warnings.filterwarnings("ignore")
 
 
 class Runner:
+    """
+    Main class for training and evaluating models
 
+    Parameters:
+
+    config: RunnerConfig                   - configuration for the runner
+    model_id: str                          - ID of the model to load
+    checkpoint: int                        - checkpoint number to load
+    load: bool                             - whether to load the model weights
+    device: str                            - device to run on, cuda or cpu
+    """
     def __init__(self, config: RunnerConfig=None, model_id: str=None, 
                  checkpoint: int=0, load: bool=False, device: str='cuda') -> None:
 
         if model_id is not None:
-            # base_dir = os.path.dirname(os.path.abspath(__file__))
+            # Try to load the model
             model_dir = os.path.join(dirs.MODEL_DIR, str(model_id))
-            print(model_dir)
-            if not os.path.exists(model_dir):
-                self.id = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            else:
+            print('Loading model from {model_dir}')
+            if os.path.exists(model_dir):
                 load = True
                 config_path = os.path.join(model_dir, 'config.yaml')
-                config = self.config = load_config(config_path)
+                config = self.config = RunnerConfig.load(config_path)
                 config.model_dir = model_dir
+
         self.config = config
         self.config.trainer.dev = torch.device(device)
 
         # Model ID
-        model_dir = dirs.MODEL_DIR
         self.timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        self.model_id = str(model_id) + str(self.timestamp)
+        self.model_id = self.config.model_id = str(model_id) + str(self.timestamp)
         self.parent_model = model_id
-        self.model_dir = os.path.join(model_dir, self.model_id)
+        self.model_dir = os.path.join(dirs.MODEL_DIR, self.model_id)
         self.config.model_dir = self.model_dir
         self.config.model_id = self.model_id
 
         self.voc = load_voc(config.dataset)
         self.dataset = load_dataset(config.dataset, pre_load=False)
         self.model = AF2SmilesTransformer(self.voc, **config.model.__dict__, dev=device)
-        self.evaluator = Evaluator(self,
-                                   config.evaluator,
-                                   use_wandb=config.use_wandb)
+        self.evaluator = Evaluator(self, config.evaluator, use_wandb=config.use_wandb)
         self.checkpoint = checkpoint
 
         if load:
-            weights_file = os.path.join(dirs.MODEL_DIR, model_id,
-                                        f'model_{self.checkpoint}.pkg')
-            self.model.load_state_dict(
-                torch.load(weights_file, map_location=self.config.trainer.dev))
-
-        self.optim = torch.optim.AdamW(self.model.parameters(),
-                                       lr=config.trainer.lr,
-                                       betas=(0.95, 0.98))
+            ## Load the model weights
+            weights = os.path.join(dirs.MODEL_DIR, model_id, f'model_{self.checkpoint}.pkg')
+            state_dict = torch.load(weights, map_location=self.config.trainer.dev)
+            self.model.load_state_dict(state_dict)
+            
+        self.optim = torch.optim.AdamW(
+            self.model.parameters(),                           
+            lr=config.trainer.lr,
+            betas=(0.95, 0.98))
         
         self.scaler = torch.cuda.amp.GradScaler()
         param_count = count_parameters(self.model)
@@ -89,11 +96,12 @@ class Runner:
             t = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             path = os.path.join(self.config.model_dir, f'model_{t}.pkg')
         torch.save(self.model.state_dict(), path)
-        save_config(self)
+        self.config.save()
 
     def train(self, epochs: int = -1):
         """
-        Training loop
+        Training loop for the model
+        Everything is configured in the config file pcmol/config.py
         """
         epochs = self.config.trainer.epochs if epochs == -1 else epochs
         batch_size = self.config.trainer.batch_size
@@ -104,9 +112,7 @@ class Runner:
         print(device_ids)
 
         self.parallel = nn.DataParallel(self.model)
-        dataloader = DataLoader(self.dataset,
-                                batch_size=batch_size,
-                                shuffle=True)
+        dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=True)
 
         print(f'Model id: {self.model_id}, starting training...')
         running_loss = 2.0

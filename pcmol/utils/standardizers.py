@@ -5,7 +5,11 @@ from rdkit import Chem
 from rdkit.Chem.MolStandardize.rdMolStandardize import FragmentParent
 
 """
-From chemstore by Martin Sicho
+From chemstore package by Martin Sicho
+Originally created by Olivier Bequignon:
+    https://github.com/OlivierBeq/Papyrus_structure_pipeline
+
+Used for standardizing the generated molecules.
 """
 
 class PapyrusStandardizer:

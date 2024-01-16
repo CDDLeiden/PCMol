@@ -1,5 +1,5 @@
 """
-Credit: https://github.com/EBjerrum/SMILES-enumeration
+This code comes from the following repository: https://github.com/EBjerrum/SMILES-enumeration
 
 @article{DBLP:journals/corr/Bjerrum17,
   author    = {Esben Jannik Bjerrum},
