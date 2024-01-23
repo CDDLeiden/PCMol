@@ -22,6 +22,9 @@ A multi-target model for de novo molecule generation. By using the internal prot
 The model can be used in two different ways: either by using the provided docker image or by setting up a conda environment. 
 
 ### 1. Docker
+
+*Note: The docker image is currently not available.*
+
 The docker image contains all the prerequisites and the pretrained model.
 ```bash
 # Pull the docker image
@@ -68,6 +71,8 @@ python pcmol/generate.py --target P21819
 If available, the appropriate AlphaFold2 embeddings to be used as input to the model will be downloaded automatically. The generated molecules will be saved in the `data/results` folder.
 
 ### 3. Calling the generator directly
+
+To generate molecules for a particular target, the `Runner` class can be used directly. The `generate_smiles` method returns a list of SMILES strings for a target protein specified by its UniProt ID.
 ```python
 from pcmol import Runner
 
@@ -77,16 +82,16 @@ SMILES = model.generate_smiles(target="P21819", num_mols=100)
 
 ## List of supported protein targets
 
-The model currently depends on the availability of AlphaFold2 embeddings for the target protein. The list of supported targets can be found in the [data/targets.csv](data/targets.csv) file.
+The model currently depends on the availability of AlphaFold2 embeddings for the target protein. The list of supported targets can be found in the [data/targets.txt](data/targets.txt) file.
 
-## Training
+<!-- ## Training
 
 To retrain the model you first need to download the dataset from [here]().
 
 ```bash
 ## Train the model
 python pcmol/train.py --model default
-```
+``` -->
 
 ---
 

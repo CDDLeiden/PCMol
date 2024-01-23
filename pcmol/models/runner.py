@@ -4,13 +4,15 @@ import os
 import time
 import datetime
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from torch import nn
 from torch.utils.data import DataLoader
+
+from pcmol.config import RunnerConfig, dirs
 from pcmol.models import AF2SmilesTransformer, count_parameters
 from pcmol.utils.smiles import check_smiles
 from pcmol.utils.dataset import load_dataset, load_voc
-from pcmol.config import RunnerConfig, dirs
 from pcmol.utils.evaluate import Evaluator
 from pcmol.utils.downloader import download_protein_data
 
@@ -28,27 +30,33 @@ class Runner:
     """
     Main class for training and evaluating models
 
-    Parameters:
-
-    config: RunnerConfig                   - configuration for the runner
-    model_id: str                          - ID of the model to load
-    checkpoint: int                        - checkpoint number to load
-    load: bool                             - whether to load the model weights
-    device: str                            - device to run on, cuda or cpu
+    Args:
+        config: RunnerConfig                   - configuration for the runner
+        model_id: str                          - ID of the model to load
+        checkpoint: int                        - checkpoint number to load
+        load: bool                             - whether to load the model weights
+        device: str                            - device to run on, cuda or cpu
     """
-    def __init__(self, config: RunnerConfig=None, model_id: str=None, 
-                 checkpoint: int=0, load: bool=False, device: str='cuda') -> None:
-
+    def __init__(
+        self, 
+        config: RunnerConfig = None,
+        model_id: str = None, 
+        checkpoint: int = 0, 
+        load_weights: bool = False, 
+        device: str = 'cuda') -> None:
+        
         if model_id is not None:
             # Try to load the model
             model_dir = os.path.join(dirs.MODEL_DIR, str(model_id))
             print('Loading model from {model_dir}')
             if os.path.exists(model_dir):
-                load = True
+                load_weights = True
                 config_path = os.path.join(model_dir, 'config.yaml')
                 config = self.config = RunnerConfig.load(config_path)
                 config.model_dir = model_dir
 
+        if model_id is None and config is None:
+            self.config = RunnerConfig()
         self.config = config
         self.config.trainer.dev = torch.device(device)
 
@@ -66,7 +74,7 @@ class Runner:
         self.evaluator = Evaluator(self, config.evaluator, use_wandb=config.use_wandb)
         self.checkpoint = checkpoint
 
-        if load:
+        if load_weights:
             ## Load the model weights
             weights = os.path.join(dirs.MODEL_DIR, model_id, f'model_{self.checkpoint}.pkg')
             state_dict = torch.load(weights, map_location=self.config.trainer.dev)
@@ -84,10 +92,19 @@ class Runner:
         print(f'Loaded model {model_id}, parameter count: {param_count} \
               \nModel directory: {config.model_dir}, checkpoint: {checkpoint}')
 
-    def save_model(self, checkpoint: bool=False, timestamp: bool=False):
+    def save_model(self, checkpoint: bool=False, timestamp: bool=False) -> None:
         """ 
         Saves the model and config to a file 
+
+        Args:
+            checkpoint: bool - whether to save a checkpoint
+            timestamp: bool - whether to timestamp the model (useful when re-training)
+
+        Default save location:
+            weights: pcmol/data/models/model_id/model_{checkpoint}.pkg
+            config:  pcmol/data/models/model_id/config.yaml
         """
+
         if checkpoint:
             self.checkpoint += 1
         path = os.path.join(self.config.model_dir,
@@ -98,23 +115,22 @@ class Runner:
         torch.save(self.model.state_dict(), path)
         self.config.save()
 
-    def train(self, epochs: int=-1):
+    def train(self) -> None:
         """
         Training loop for the model
-        Everything is configured in the config file pcmol/config.py
+        All relevant hyperparams are configured in the config file pcmol/pcmol/config.py
         """
-        epochs = self.config.trainer.epochs if epochs == -1 else epochs
-        batch_size = self.config.trainer.batch_size
+
         dev = self.config.trainer.dev
+        epochs = self.config.trainer.epochs
+        batch_size = self.config.trainer.batch_size
         device_ids = self.config.trainer.devices
 
-        os.makedirs(self.model_dir, exist_ok=True)
-        print(device_ids)
-
-        self.parallel = nn.DataParallel(self.model)
+        parallel = nn.DataParallel(self.model)
         dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=True)
+        print(f'Model id: {self.model_id}, starting training on {self.config.trainer.dev}:{device_ids}...')
+        os.makedirs(self.model_dir, exist_ok=True)
 
-        print(f'Model id: {self.model_id}, starting training...')
         running_loss = 2.0
         best = float('inf')
         t00 = time.time()
@@ -124,6 +140,7 @@ class Runner:
                 wandb.log({'Epoch': epoch})
             print(f'\nEpoch {epoch + 1}/{epochs}\n')
 
+            # Batch loop
             for i, src in enumerate(dataloader):
                 proteins, smiles, pchembl = src
                 proteins = proteins.to(dev)
@@ -132,7 +149,7 @@ class Runner:
                 self.optim.zero_grad()
 
                 with torch.cuda.amp.autocast():
-                    _, losses = self.parallel(
+                    _, losses = parallel(
                         x=smiles,
                         af_emb=proteins,
                         pchembl_targets=pchembl,
@@ -140,7 +157,6 @@ class Runner:
                         train=True)
 
                 loss = losses
-
                 self.scaler.scale(loss.cuda().mean()).backward()
                 self.scaler.step(self.optim)
                 self.scaler.update()
@@ -186,17 +202,36 @@ class Runner:
                         wandb.log({
                             'Valid %': valid,
                             'Unique %': unique,
-                            'Novel %': novel
-                        })
+                            'Novel %': novel})
                 # Backups
                 if i % 10000 == 0:
                     self.save_model(timestamp=True)
-            self.save_model(checkpoint=True)
 
-    def targetted_generation(self, protein_id, repeat=1, batch_size=16, verbose=False, dev=None):
+            # Save model at the end of each epoch
+            self.save_model(checkpoint=True)
+        print('Finished training.')
+
+    def targetted_generation(
+            self, 
+            protein_id: str, 
+            repeat:int = 1, 
+            batch_size:int = 16, 
+            verbose:bool = False,
+            dev: str = None) -> pd.DataFrame:
         """
         Generates smiles for a target pid
+
+        Args:
+            protein_id: str - target protein ID
+            repeat: int - number of times to repeat the generation
+            batch_size: int - batch size for generation
+            verbose: bool - whether to print the results
+            dev: str - device to run on, cuda or cpu
+
+        Returns:
+            result_df: pd.DataFrame - dataframe containing the results
         """
+
         dev = self.config.trainer.dev if dev is None else dev
         net = torch.nn.DataParallel(self.model)
 
@@ -246,13 +281,22 @@ class Runner:
         print(f'\nSaved results to {path}')
         print(result_df.head(repeat*batch_size))
 
-        return smiles_list, scores.sum() / batch_size * repeat
+        return result_df 
 
-    def pcm(self, smiles, target):
+    def pcm(self, smiles: str, target: str):
         """
         Calculates the pChEMBL value of a list of smiles
         For models that were trained using the pChEMBL loss
+
+        Args:
+            smiles: str - smiles string to evaluate
+            target: str - target protein uniprot ID
+
+        Returns:
+            pchembl: float        - pChEMBL value of the smiles
+            gen_smiles: str       - generated smiles
         """
+        
         dev = self.config.trainer.dev
         net = torch.nn.DataParallel(self.model)
 

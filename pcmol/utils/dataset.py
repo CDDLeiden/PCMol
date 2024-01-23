@@ -168,11 +168,19 @@ class ProteinSmilesDataset(TorchDataset):
         dataset_file (str): Path to the dataset file
         voc_smiles (VocSmiles): Vocabulary object
         pre_encode_smiles (bool): Whether to pre-tokenize the SMILES strings (default: False)
-            Useful for speeding up training
+            *** Useful for speeding up training (pre-computing the SMILES tokens)
+        pre_load (bool): Whether to pre-load all embeddings into memory (default: False)
+        protein_set (str): Path to a file containing a list of protein ids to load (optional)
     """
 
-    def __init__(self, alphafold_embedding_dir, dataset_file, voc_smiles, 
-                 pre_load=False, protein_set=None, train=False, **kwargs):
+    def __init__(
+        self, 
+        alphafold_embedding_dir: str, 
+        dataset_file: str,
+        voc_smiles: VocSmiles, 
+        pre_load=False, 
+        protein_set=None, 
+        train=False, **kwargs) -> None:
         
         self.proteins = ProteinDataset(alphafold_embedding_dir, 
                                        pre_load=pre_load, 
@@ -213,9 +221,6 @@ class ProteinSmilesDataset(TorchDataset):
             pchembl = torch.tensor(float(pchembl))
             smiles = smiles.strip('\n').split(' ')
             protein_embedding = self.proteins.embeddings[pid]
-            # if self.pre_load:
-                # encoded_smiles = self.encoded_smiles[idx]
-            # else:
             encoded_smiles = self.voc_smiles.encode([smiles])
         except Exception as e:
             self.error_count += 1
@@ -321,6 +326,13 @@ def augment_ligands(ligand_list, num_augmentations, weighted_sampling=True, r=1.
     Augments the ligands in the ligand_list by sampling from the list of ligands
     generate_alternative_smiles(ligand, n_alternatives) is used to generate the alternative smiles
     via enumeration
+
+    Args:
+        ligand_list (list): List of Ligand objects
+        num_augmentations (int): Number of augmentations to generate
+        weighted_sampling (bool): Whether to sample the ligands from a weighted distribution
+            based on the pchembl values
+        r (float): Exponent for the pchembl weights (default: 1.5)
     """
     augmented = []
 
@@ -329,11 +341,13 @@ def augment_ligands(ligand_list, num_augmentations, weighted_sampling=True, r=1.
     #   pchembl=6.5 -> 1
     #   pchembl=7.5 -> 2
     #   pchembl=8.5 -> 3
-    # ^r introduces a nonlinear bias towards higher pchembl values
+    # ^r introduces a nonlinear bias towards ligands with higher pchembl values
+    # e.g. a ligand with pchembl=8.5 will have a weight of 3^r = 5.2, while a ligand with pchembl=6.5
+    # will have a weight of 1^r = 1, i.e. the ligand with pchembl=8.5 will be sampled 5.2 times more often
 
     if weighted_sampling:
         # Sample smiles to be augmented from the pchembl-weighted distribution
-        sampling_weights = [(x.pchembl - 5.5)**r for x in ligand_list]
+        sampling_weights = [(ligand.pchembl - 5.5)**r for ligand in ligand_list]
         sampled = random.choices(ligand_list, k=num_augmentations, weights=sampling_weights)
     else:
         # Sample smiles to be augmented uniformly
@@ -348,26 +362,58 @@ def augment_ligands(ligand_list, num_augmentations, weighted_sampling=True, r=1.
 
 def create_dataset(df, pids, min_num_smiles, max_num_smiles, coeff_dict):
     """
+    Creates a dataset with a minimum number of smiles per protein
+
+    Args:
+        df (pd.DataFrame): Dataframe containing the dataset
+        pids (list): List of proteins to augment
+        min_num_smiles (int): Minimum number of smiles per protein
+        max_num_smiles (int): Maximum number of smiles per protein
+        coeff_dict (dict): Dictionary of augmentation coefficients for the number of smiles per protein
+            Each is in the range [0, 1] and is used to scale the number of total augmentations, where
+            0 -> min_num_smiles, 1 -> max_num_smiles
     """
     augmented = {}
+
+    ## Iterate over proteins
     for j, target in enumerate(pids):
         smiles = df[df['target_id']==target]['SMILES'].to_list()
         pchembl = df[df['target_id']==target]['pchembl_value_Mean'].to_list()
         ligands = [Ligand(smiles_string, target, pchembl[i]) for i, smiles_string in enumerate(smiles)]
         num_smiles = len(smiles)
 
+        ## Determine the number of augmentations
         num_augmentations = int(min_num_smiles - num_smiles + int(coeff_dict[target] * max_num_smiles))
         if num_augmentations < min_num_smiles:
             num_augmentations = int(min_num_smiles)
         
+        ## Augment the ligands
         ligands += augment_ligands(ligands, num_augmentations)
         print(f'{j:5} | Target: {target} | before aug: {len(smiles):8} | num_augmentations: {num_augmentations:5} | result: {len(ligands):5}' , end='\r')
         augmented[target] = ligands
-
     return augmented
 
 def get_coefficients(dataframe, column='target_id', scaling_factor=1.1, plot=True):
     """
+    Calculates the coefficients for the number of smiles per protein post augmentation
+    Coefficients are in the range [0, 1] and are used to scale the number of total augmentations, where
+    0 -> min_num_smiles, 1 -> max_num_smiles
+
+    Since the number of smiles per protein is highly skewed and follows, a power law distribution,
+    the coefficients are calculated as follows:
+    - Performs a log transformation on the number of smiles per protein which results in a (close to) linear distribution
+    - The values are then normalized in the range [0, 1]
+    - The coefficients are then calculated as the normalized values multiplied by a scaling factor (e.g. if the scaling factor is 2.0,
+      the coefficients will be in the range [0, 2.0])
+
+    Args:
+        dataframe (pd.DataFrame): Dataframe containing the dataset
+        column (str): Column to group by (default: 'target_id')
+        scaling_factor (float): Scaling factor for the coefficients (default: 1.1)
+        plot (bool): Whether to plot the coefficients (default: True)
+
+    Returns:
+        coeff_dict (dict): Dictionary of coefficients accessible via protein_id
     """
     counts = dataframe['target_id'].value_counts().to_list()
     order = np.argsort(counts)
@@ -375,9 +421,11 @@ def get_coefficients(dataframe, column='target_id', scaling_factor=1.1, plot=Tru
     pids = dataframe['target_id'].value_counts().index.to_list()
     pids = [pids[i] for i in order]
     logd = np.log(n_smiles)
+
     # normalize in range 0-1
     coefficients = (logd - logd.min()) / (logd.max() - logd.min()) * scaling_factor
     coeff_dict = dict(zip(pids, coefficients))
+
     if plot:
         plt.title('Coefficients for the number of smiles per protein')
         plt.bar(range(len(coefficients)), coefficients[::-1])

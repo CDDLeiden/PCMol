@@ -3,7 +3,6 @@ import torch.nn as nn
 from torch.nn import MultiheadAttention
 
 
-
 ## Masking
 def padding_mask(seq, pad_idx=0, two_dim=False):
     """
