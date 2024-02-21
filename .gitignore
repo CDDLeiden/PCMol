@@ -1,3 +1,5 @@
+.vscode/
+
 # Data files
 data/*
 !data/targets.txt

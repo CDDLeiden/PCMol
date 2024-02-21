@@ -70,14 +70,16 @@ docker run -it andriusbern/pcmol:latest python -m pcmol.generate --target P21819
 ### 1. Using a script (conda route)
 ```bash
 # Run the model on a single target using Accession ID (generates 10 SMILES strings)
+conda activate pcmol
 python pcmol/generate.py --target P21819
 ```
 
-If available, the appropriate AlphaFold2 embeddings to be used as input to the model will be downloaded automatically. The generated molecules will be saved in the `data/results` folder.
+If available, the appropriate AlphaFold2 embeddings to be used as input to the model will be downloaded automatically. The generated molecules are saved in the `data/results` folder.
 
 ### 2. Calling the generator directly
 
 To generate molecules for a particular target, the `Runner` class can be used directly. The `generate_smiles` method returns a list of SMILES strings for a target protein specified by its Accession ID.
+
 ```python
 from pcmol import Runner
 
