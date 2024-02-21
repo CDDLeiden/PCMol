@@ -1,9 +1,10 @@
 # PCMol 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A multi-target model for de novo molecule generation. By using the internal protein representations of the AlphaFold^[1] model, a single SMILES-based transformer can generate relevant molecules for thousands of protein targets. 
+A multi-target model for de novo molecule generation. By using the internal protein representations of the AlphaFold<sup>[1]</sup> model, a single SMILES-based transformer can generate relevant molecules for thousands of protein targets (embeddings are available for 4,331 proteins). 
 
-The model was trained on the Papyrus^[2] bioactivity dataset (661,613 unique protein-ligand pairs in total, 6,249,253 after augmentation).
+The model was trained using bioactivity data from the Papyrus<sup>[2]</sup> dataset (661,613 unique protein-ligand pairs in total, 6,249,253 after augmentation).
+
 
 
 ![alt text](assets/PCMol.png)
@@ -107,6 +108,6 @@ https://chemrxiv.org/engage/chemrxiv/article-details/65d47632e9ebbb4db9c63988
 
 ## References
 
-[1] Jumper, J., Evans, R., Pritzel, A., Green, T., Figurnov, M., Ronneberger, O., ... & Hassabis, D. (2021). **Highly accurate protein structure prediction with AlphaFold.** Nature, 596(7873), 583-589.
+[1]: Jumper, J., Evans, R., Pritzel, A., Green, T., Figurnov, M., Ronneberger, O., ... & Hassabis, D. (2021). **Highly accurate protein structure prediction with AlphaFold.** Nature, 596(7873), 583-589.
 
-[2] Béquignon, O. J., Bongers, B. J., Jespers, W., IJzerman, A. P., van der Water, B., & van Westen, G. J. (2023). **Papyrus: a large-scale curated dataset aimed at bioactivity predictions.** Journal of cheminformatics, 15(1), 3.
+[2]: Béquignon, O. J., Bongers, B. J., Jespers, W., IJzerman, A. P., van der Water, B., & van Westen, G. J. (2023). **Papyrus: a large-scale curated dataset aimed at bioactivity predictions.** Journal of cheminformatics, 15(1), 3.
