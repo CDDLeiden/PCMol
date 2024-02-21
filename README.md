@@ -1,7 +1,10 @@
 # PCMol 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A multi-target model for de novo molecule generation. By using the internal protein representations of the AlphaFold model, a single SMILES-based transformer can generate relevant molecules for thousands of protein targets. 
+A multi-target model for de novo molecule generation. By using the internal protein representations of the AlphaFold^[1] model, a single SMILES-based transformer can generate relevant molecules for thousands of protein targets. 
+
+The model was trained on the Papyrus^[2] bioactivity dataset (661,613 unique protein-ligand pairs in total, 6,249,253 after augmentation).
+
 
 ![alt text](assets/PCMol.png)
 
@@ -17,22 +20,19 @@ A multi-target model for de novo molecule generation. By using the internal prot
 
 ---
 
-## Installation
+# Installation
 
-The model can be used in two different ways: either by using the provided docker image or by setting up a conda environment. 
 
-### 1. Docker
+### 1. Setup script (recommended)
+The setup script will install the required dependencies and download the pretrained model.
 
-*Note: The docker image is currently not available.*
-
-The docker image contains all the prerequisites and the pretrained model.
 ```bash
-# Pull the docker image
-docker pull andriusbern/pcmol:latest
+# Setting up a fresh conda environment
+bash setup.sh
 ```
 
 ### 2. Conda
-The conda route requires the user to download the pretrained model and training sets manually.
+The conda route requires the user to download the pretrained model manually (link below).
 
 ```bash
 # Setting up a fresh conda environment
@@ -40,44 +40,47 @@ conda env create -f environment.yml && conda activate pcmol
 git clone https://github.com/andriusbern/pcmol.git && cd pcmol
 python -m pip install -e .
 ```
+<!-- 
+### 3. Docker 
+
+*Note: The docker image is currently not available.*
+
+The docker image contains all the prerequisites and the pretrained model.
+```bash
+# Pull the docker image
+docker pull andriusbern/pcmol:latest
+``` -->
+
+### Pretrained model
+
+**When not using the setup script, the pretrained model can be downloaded from [here](https://surfdrive.surf.nl/files/index.php/s/T0wUBOmAEYYxxOo). It should then be placed in the `.../pcmol/data/models` folder.*
 
 ---
 
-## Pretrained model
-
-When using the conda route, download the pretrained model (and training sets) directly from the command line, run the following command:
-```bash
-python download.py --model XL ## Pulls the model file and training sets
-```
-
-**Alternatively, the pretrained model can be downloaded from [here](https://drive.google.com/drive/folders/1-5Z3QZ3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3?usp=sharing). It should then be placed in the `.../pcmol/data/models` folder.*
-
-
-
-## Generating molecules for a particular target
-
+# Generating molecules for a particular target
+<!-- 
 ### 1. Docker
 ```bash
 # Run the model on a single target using UniProt ID (generates 10 SMILES strings)
 docker run -it andriusbern/pcmol:latest python -m pcmol.generate --target P21819
-```
+``` -->
 
-### 2. Using a script (conda route)
+### 1. Using a script (conda route)
 ```bash
-# Run the model on a single target using UniProt ID (generates 10 SMILES strings)
+# Run the model on a single target using Accession ID (generates 10 SMILES strings)
 python pcmol/generate.py --target P21819
 ```
 
 If available, the appropriate AlphaFold2 embeddings to be used as input to the model will be downloaded automatically. The generated molecules will be saved in the `data/results` folder.
 
-### 3. Calling the generator directly
+### 2. Calling the generator directly
 
-To generate molecules for a particular target, the `Runner` class can be used directly. The `generate_smiles` method returns a list of SMILES strings for a target protein specified by its UniProt ID.
+To generate molecules for a particular target, the `Runner` class can be used directly. The `generate_smiles` method returns a list of SMILES strings for a target protein specified by its Accession ID.
 ```python
 from pcmol import Runner
 
 model = Runner(model="XL")
-SMILES = model.generate_smiles(target="P21818", num_mols=100)
+SMILES = model.generate_smiles(target="P21819", num_mols=100)
 ```
 
 ## List of supported protein targets
@@ -100,3 +103,10 @@ python pcmol/train.py --model default
 The preprint is available on ChemRxiv:
 
 https://chemrxiv.org/engage/chemrxiv/article-details/65d47632e9ebbb4db9c63988
+
+
+## References
+
+[1] Jumper, J., Evans, R., Pritzel, A., Green, T., Figurnov, M., Ronneberger, O., ... & Hassabis, D. (2021). **Highly accurate protein structure prediction with AlphaFold.** Nature, 596(7873), 583-589.
+
+[2] Béquignon, O. J., Bongers, B. J., Jespers, W., IJzerman, A. P., van der Water, B., & van Westen, G. J. (2023). **Papyrus: a large-scale curated dataset aimed at bioactivity predictions.** Journal of cheminformatics, 15(1), 3.

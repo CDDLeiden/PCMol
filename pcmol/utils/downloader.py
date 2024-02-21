@@ -29,7 +29,8 @@ def download_protein_data(pid, full_data=False, unzip=True, status='', data_url=
         return True
 
     try:
-        request.urlretrieve(data_url, local_file)
+        # request.urlretrieve(data_url, local_file) # This method is deprecated (after update to surfdrive)
+        os.system(f'wget -O {local_file} {data_url}')
     except Exception as e:
         os.remove(local_file)
         print(f'Files for protein {pid} could not be downloaded.', e)

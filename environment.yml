@@ -1,12 +1,13 @@
 # Conda environment 
 
-name: pcmol2
+name: pcmol
 
 # channels:
   # - conda-forge
 
 dependencies:
   - python=3.10
+  - wget
   - pip
   - pip:
     - rdkit
