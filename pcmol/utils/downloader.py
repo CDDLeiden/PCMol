@@ -6,8 +6,8 @@ import argparse
 from pcmol.config import dirs
 
 
-DATASET_URL_LITE = f'https://surfdrive.surf.nl/files/index.php/s/fE7hpHbd0LJZu6h/download?path=%2F'
-DATASET_URL_FULL = f'https://surfdrive.surf.nl/files/index.php/s/P8XXnoGonUCMLSr/download?path=%2F'
+DATASET_URL_FULL = f'https://surfdrive.surf.nl/files/index.php/s/fE7hpHbd0LJZu6h/download?path=%2F'
+DATASET_URL_LITE = r'https://surfdrive.surf.nl/files/index.php/s/Gqy5vPOYJUHVaU7/download\?path\=%2F\&files\='
 
 
 def download_protein_data(pid, full_data=False, unzip=True, status='', data_url=None):
@@ -19,10 +19,12 @@ def download_protein_data(pid, full_data=False, unzip=True, status='', data_url=
         url = DATASET_URL_FULL if full_data else DATASET_URL_LITE
         data_url = url + f'{pid}.zip'
 
-    local_file = os.path.join(ALPHAFOLD_DIR, f'{pid}.zip')
+    print(f'{status} Downloading from {data_url}...')
+
+    local_file = os.path.join(dirs.ALPHAFOLD_DIR, f'{pid}.zip')
     open(local_file, 'a').close()
 
-    if os.path.isdir(os.path.join(ALPHAFOLD_DIR, pid)):
+    if os.path.isdir(os.path.join(dirs.ALPHAFOLD_DIR, pid)):
         print(f'{status} Protein sequence {pid} already downloaded.')
         return True
 

@@ -1,13 +1,16 @@
 # Data files
 data/*
 !data/targets.txt
-data/alphafold/*
 
 !data/README.md
 !data/models/.gitkeep
 !data/alphafold/*.npy
-# !data/alphafold/emb_max.npy
-# !data/alphafold/emb_min.npy
+
+# All files in the alphafold directory
+!data/alphafold/
+data/alphafold/*
+!data/alphafold/emb_max.npy
+!data/alphafold/emb_min.npy
 
 # Other
 pcmol.egg-info/

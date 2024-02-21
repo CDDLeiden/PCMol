@@ -1,16 +1,18 @@
-## Conda environment 
+# Conda environment 
 
-name: pcmol
+name: pcmol2
 
-channels:
-  - conda-forge
+# channels:
+  # - conda-forge
 
 dependencies:
   - python=3.10
-  - rdkit
   - pip
   - pip:
+    - rdkit
     - torch
     - tqdm
     - wandb 
     - papyrus-structure-pipeline
+    - pandas
+    - matplotlib

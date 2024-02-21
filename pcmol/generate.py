@@ -29,7 +29,7 @@ if __name__ == "__main__":
                         help='TSV file with target IDs in the first column')
     parser.add_argument('--batch_size', type=int, default=1, 
                         help='Batch size for generation')
-    parser.add_argument('--repeats', type=int, default=10, 
+    parser.add_argument('--repeat', type=int, default=10, 
                         help='Number of times to repeat generation. \
                         Total number of samples is repeats*batch_size.')
     args = parser.parse_args()
@@ -60,4 +60,5 @@ if __name__ == "__main__":
     for i, pid in enumerate(pids):
         print('\n', i, pid)
 
-        smiles_df, _ = trainer.targetted_generation(protein_id=pid, batch_size=1, repeat=args.repeat, verbose=True, dev=args.device)
+        smiles_df = trainer.targetted_generation(protein_id=pid, batch_size=1, repeat=args.repeat, verbose=True, dev=args.device)
+        

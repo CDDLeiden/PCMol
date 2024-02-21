@@ -1,5 +1,5 @@
-from alphagen.runner import Runner
-from alphagen.config import save_config, RunnerConfig
+from pcmol.runner import Runner
+from pcmol.config import RunnerConfig
 import wandb
 
 if __name__ == "__main__":
@@ -8,7 +8,7 @@ if __name__ == "__main__":
     parser.add_argument('--model_id', '-n', type=str, default=None)
     parser.add_argument('--checkpoint', '-c', type=int, default=0)
     parser.add_argument('--use_wandb', '-w', action='store_true')
-    parser.add_argument('--project', '-p', type=str, default='alphagen5')
+    parser.add_argument('--project', '-p', type=str, default='pcmol')
 
     args = parser.parse_args()
 

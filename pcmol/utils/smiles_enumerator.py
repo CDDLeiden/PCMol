@@ -13,6 +13,7 @@ This code comes from the following repository: https://github.com/EBjerrum/SMILE
   biburl    = {http://dblp.uni-trier.de/rec/bib/journals/corr/Bjerrum17},
   bibsource = {dblp computer science bibliography, http://dblp.org}
 }
+
 """
 
 from rdkit import Chem

@@ -77,7 +77,7 @@ To generate molecules for a particular target, the `Runner` class can be used di
 from pcmol import Runner
 
 model = Runner(model="XL")
-SMILES = model.generate_smiles(target="P21819", num_mols=100)
+SMILES = model.generate_smiles(target="P21818", num_mols=100)
 ```
 
 ## List of supported protein targets
@@ -97,4 +97,6 @@ python pcmol/train.py --model default
 
 ## Paper & Authors
 
-To be added.
+The preprint is available on ChemRxiv:
+
+https://chemrxiv.org/engage/chemrxiv/article-details/65d47632e9ebbb4db9c63988

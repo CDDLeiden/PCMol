@@ -48,7 +48,7 @@ class Runner:
         if model_id is not None:
             # Try to load the model
             model_dir = os.path.join(dirs.MODEL_DIR, str(model_id))
-            print('Loading model from {model_dir}')
+            print(f'Loading model from {model_dir}')
             if os.path.exists(model_dir):
                 load_weights = True
                 config_path = os.path.join(model_dir, 'config.yaml')
@@ -237,7 +237,7 @@ class Runner:
 
         try:
             ## Check if directory exists
-            path = os.path.join(self.config.dataset.alphafold_dir, protein_id)
+            path = os.path.join(dirs.ALPHAFOLD_DIR, protein_id)
             if not os.path.exists(path):
                 # pass
                 status = download_protein_data(protein_id)
