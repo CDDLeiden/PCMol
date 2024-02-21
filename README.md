@@ -9,7 +9,7 @@ The model was trained using bioactivity data from the Papyrus<sup>[2]</sup> data
 
 ![alt text](assets/PCMol.png)
 
-
+---
 
 ![alt text](assets/targets.png)
 
@@ -28,7 +28,8 @@ The model was trained using bioactivity data from the Papyrus<sup>[2]</sup> data
 The setup script will install the required dependencies and download the pretrained model.
 
 ```bash
-# Setting up a fresh conda environment
+git clone https://github.com/CDDLeiden/pcmol.git && cd pcmol
+chmod +x setup.sh
 bash setup.sh
 ```
 
@@ -38,7 +39,7 @@ The conda route requires the user to download the pretrained model manually (lin
 ```bash
 # Setting up a fresh conda environment
 conda env create -f environment.yml && conda activate pcmol
-git clone https://github.com/andriusbern/pcmol.git && cd pcmol
+git clone https://github.com/CDDLeiden/pcmol.git && cd pcmol
 python -m pip install -e .
 ```
 <!-- 
