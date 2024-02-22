@@ -1,5 +1,5 @@
 # PCMol 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+ [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10512870.svg)](https://doi.org/10.5281/zenodo.10512870) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A multi-target model for de novo molecule generation. By using the internal protein representations of the AlphaFold<sup>[1]</sup> model, a single SMILES-based transformer can generate relevant molecules for thousands of protein targets (embeddings are available for 4,331 proteins). 
 
@@ -55,7 +55,7 @@ docker pull andriusbern/pcmol:latest
 
 ### Pretrained model
 
-**When not using the setup script, the pretrained model can be downloaded from [here](https://surfdrive.surf.nl/files/index.php/s/T0wUBOmAEYYxxOo). It should then be placed in the `.../pcmol/data/models` folder.*
+**When not using the setup script, the pretrained model can be downloaded from [here](https://zenodo.org/records/10512870)[ (mirror)](https://surfdrive.surf.nl/files/index.php/s/T0wUBOmAEYYxxOo). It should then be placed in the `.../pcmol/data/models` folder.*
 
 ---
 
