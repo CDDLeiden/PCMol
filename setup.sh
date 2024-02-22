@@ -9,7 +9,8 @@ pip install -e .
 # Download the pretrained model files
 printf "\n\nDownloading the model files..."
 
-cd data/models
+cd data
+mkdir models && cd models
 wget https://surfdrive.surf.nl/files/index.php/s/T0wUBOmAEYYxxOo/download -O XL.tar
 tar -xvf XL.tar
 rm XL.tar

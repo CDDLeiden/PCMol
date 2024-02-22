@@ -4,11 +4,15 @@
 data/*
 !data/targets.txt
 
+# All files in the alphafold directory
 !data/README.md
 !data/models/.gitkeep
 !data/alphafold/*.npy
 
-# All files in the alphafold directory
+!data/models/
+data/models/*
+!data/models/.gitkeep
+
 !data/alphafold/
 data/alphafold/*
 !data/alphafold/emb_max.npy
