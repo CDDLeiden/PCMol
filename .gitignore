@@ -18,6 +18,13 @@ data/alphafold/*
 !data/alphafold/emb_max.npy
 !data/alphafold/emb_min.npy
 
+# Include .data/training/augmented_data/voc_smiles.txt while excluding all other files in the directory
+!data/training/
+data/training/*
+!data/training/augmented_data
+data/training/augmented_data/*
+!data/training/augmented_data/voc_smiles.txt
+
 # Other
 pcmol.egg-info/
 **/__pycache__/
