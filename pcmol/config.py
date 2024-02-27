@@ -46,7 +46,7 @@ class TrainerConfig:
     lr:                   float = 9e-5
     warmup_steps:         int = 100  
     devices =             [1, 2, 3]
-    dev =                 torch.device('cuda') 
+    dev =                 torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu') 
     trained_for:          int = 0 # Total number of samples seen
     parameter_count:      int = 0 # Total number of parameters in the model
 

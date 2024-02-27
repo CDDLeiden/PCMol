@@ -67,12 +67,16 @@ docker pull andriusbern/pcmol:latest
 docker run -it andriusbern/pcmol:latest python -m pcmol.generate --target P21819
 ``` -->
 
-### 1. Using a script (conda route)
+### 1. Using a script (conda route) 
 ```bash
 # Run the model on a single target using Accession ID (generates 10 SMILES strings)
 conda activate pcmol
 python pcmol/generate.py --target P29275
+
+# If GPU is not available
+python pcmol/generate.py --target P29275 --device cpu
 ```
+
 
 If available, the appropriate AlphaFold2 embeddings to be used as input to the model will be downloaded automatically. The generated molecules are saved in the `data/results` folder.
 

@@ -3,6 +3,7 @@
 # Conda
 printf "\n\nSetting up the conda environment..."
 conda env create -f environment.yml
+eval "$(conda shell.bash hook)"
 conda activate pcmol
 pip install -e .
 

@@ -76,7 +76,7 @@ class Runner:
             self.dataset = load_dataset(config.dataset, pre_load=False)
         else:
             self.dataset = None
-        self.model = AF2SmilesTransformer(self.voc, **config.model.__dict__, dev=device)
+        self.model = AF2SmilesTransformer(self.voc, **config.model.__dict__, dev=config.trainer.dev)
         self.evaluator = Evaluator(self, config.evaluator, use_wandb=config.use_wandb)
         self.checkpoint = checkpoint
 
