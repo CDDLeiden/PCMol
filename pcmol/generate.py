@@ -39,7 +39,7 @@ if __name__ == "__main__":
     else:
         os.environ['CUDA_VISIBLE_DEVICES']=''
 
-    trainer = Runner(model_id=args.model, checkpoint=args.checkpoint, device=args.device)
+    trainer = Runner(model_id=args.model, checkpoint=args.checkpoint, device=args.device, inference=True)
 
     if args.targets is not None:
         pids = [args.targets]

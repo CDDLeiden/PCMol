@@ -190,9 +190,9 @@ class ProteinSmilesDataset(TorchDataset):
         if train:
             self.tsv_dataset = self.read_dataset(dataset_file)
             print(f'Dataset: len: {len(self)}')
+            self.dataframe = read_dataset(dataset_file)
         else:
             self.tsv_dataset = None
-        self.dataframe = read_dataset(dataset_file)
         self.encoded_smiles = []
         self.error_count = 0
         

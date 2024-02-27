@@ -42,7 +42,8 @@ class Runner:
         config: RunnerConfig = None,
         model_id: str = None, 
         checkpoint: int = 0, 
-        load_weights: bool = False, 
+        load_weights: bool = False,
+        inference=False, 
         device: str = 'cuda') -> None:
         
         if model_id is not None:
@@ -71,7 +72,10 @@ class Runner:
         self.config.model_id = self.model_id
 
         self.voc = load_voc(config.dataset)
-        self.dataset = load_dataset(config.dataset, pre_load=False)
+        if not inference:
+            self.dataset = load_dataset(config.dataset, pre_load=False)
+        else:
+            self.dataset = None
         self.model = AF2SmilesTransformer(self.voc, **config.model.__dict__, dev=device)
         self.evaluator = Evaluator(self, config.evaluator, use_wandb=config.use_wandb)
         self.checkpoint = checkpoint
