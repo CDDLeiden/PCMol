@@ -9,17 +9,13 @@ pip install -e .
 # Download the pretrained model files
 printf "\n\nDownloading the model files..."
 
-cd data
-# mkdir models
-cd models
+cd data/models
 wget https://surfdrive.surf.nl/files/index.php/s/T0wUBOmAEYYxxOo/download -O XL.tar
 tar -xvf XL.tar
 rm XL.tar
-cd ..
-
-printf "\n\nCurrent directory: $(pwd)"
+cd ../..
 
 ## Test the installation
-printf "\n\nTesting the installation... Generating SMILES for P29275"
+printf "\n\nTesting the installation... Generating SMILES for P29275 (A2AR_HUMAN) using the pretrained model."
 
 python pcmol/generate.py --target P29275

@@ -177,7 +177,7 @@ class Evaluator:
         result_df['valid'] = [self.valid(smi) for smi in list_of_smiles]
 
         ## Uniqueness
-        result_df['unique'] = [smi not in list_of_smiles for smi in list_of_smiles]
+        # result_df['unique'] = [smi not in list_of_smiles for smi in list_of_smiles]
         if superset is not None:
             result_df['unique_overall'] = [smi not in superset for smi in list_of_smiles]
 
