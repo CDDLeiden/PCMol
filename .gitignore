@@ -21,9 +21,9 @@ data/alphafold/*
 # Include .data/training/augmented_data/voc_smiles.txt while excluding all other files in the directory
 !data/training/
 data/training/*
-!data/training/augmented_data
-data/training/augmented_data/*
-!data/training/augmented_data/voc_smiles.txt
+!data/training/final_dataset
+data/training/final_dataset/*
+!data/training/final_dataset/voc_smiles.txt
 
 # Other
 pcmol.egg-info/

@@ -14,9 +14,11 @@ mkdir models && cd models
 wget https://surfdrive.surf.nl/files/index.php/s/T0wUBOmAEYYxxOo/download -O XL.tar
 tar -xvf XL.tar
 rm XL.tar
-cd ../..
+cd ..
+
+printf "\n\nCurrent directory: $(pwd)"
 
 ## Test the installation
 printf "\n\nTesting the installation... Generating SMILES for P21918"
 
-python pcmol/generate.py --target P21918
+python pcmol/generate.py --target P29275

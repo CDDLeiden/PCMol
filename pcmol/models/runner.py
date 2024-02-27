@@ -52,11 +52,13 @@ class Runner:
             if os.path.exists(model_dir):
                 load_weights = True
                 config_path = os.path.join(model_dir, 'config.yaml')
+                print('Loading config from', config_path)
                 config = self.config = RunnerConfig.load(config_path)
                 config.model_dir = model_dir
 
         if model_id is None and config is None:
             self.config = RunnerConfig()
+            
         self.config = config
         self.config.trainer.dev = torch.device(device)
 

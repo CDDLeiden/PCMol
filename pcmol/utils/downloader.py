@@ -6,9 +6,7 @@ import argparse
 from pcmol.config import dirs
 
 
-DATASET_URL_FULL = f'https://surfdrive.surf.nl/files/index.php/s/fE7hpHbd0LJZu6h/download?path=%2F'
 DATASET_URL_LITE = r'https://surfdrive.surf.nl/files/index.php/s/Gqy5vPOYJUHVaU7/download\?path\=%2F\&files\='
-
 
 def download_protein_data(pid, full_data=False, unzip=True, status='', data_url=None):
     """Downloads the processed protein sequence from online storage"""
@@ -16,18 +14,17 @@ def download_protein_data(pid, full_data=False, unzip=True, status='', data_url=
     print(f'{status} Downloading AlphaFold embeddings for {pid} to <{dirs.ALPHAFOLD_DIR}>...')
 
     if data_url is None:
-        url = DATASET_URL_FULL if full_data else DATASET_URL_LITE
+        url = DATASET_URL_LITE
         data_url = url + f'{pid}.zip'
 
-    print(f'{status} Downloading from {data_url}...')
-
-    local_file = os.path.join(dirs.ALPHAFOLD_DIR, f'{pid}.zip')
-    open(local_file, 'a').close()
 
     if os.path.isdir(os.path.join(dirs.ALPHAFOLD_DIR, pid)):
         print(f'{status} Protein sequence {pid} already downloaded.')
         return True
 
+    print(f'{status} Downloading from {data_url}...')
+    local_file = os.path.join(dirs.ALPHAFOLD_DIR, f'{pid}.zip')
+    # open(local_file, 'a').close()
     try:
         # request.urlretrieve(data_url, local_file) # This method is deprecated (after update to surfdrive)
         os.system(f'wget -O {local_file} {data_url}')
