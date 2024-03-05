@@ -7,15 +7,15 @@ The model was trained using bioactivity data from the Papyrus<sup>[2]</sup> data
 
 ---
 
+![alt text](assets/PCMol.png)
+
+---
+
 ## Paper & Authors
 
 The preprint is available on ChemRxiv:
 
 https://chemrxiv.org/engage/chemrxiv/article-details/65d47632e9ebbb4db9c63988
-
----
-
-![alt text](assets/PCMol.png)
 
 ---
 
