@@ -41,13 +41,13 @@ chmod +x setup.sh
 bash setup.sh
 ```
 
-### 2. Conda
+### 2. Conda (alternative)
 The conda route requires the user to download the pretrained model manually (link below).
 
 ```bash
 # Setting up a fresh conda environment
-conda env create -f environment.yml && conda activate pcmol
 git clone https://github.com/CDDLeiden/pcmol.git && cd pcmol
+conda env create -f environment.yml && conda activate pcmol
 python -m pip install -e .
 ```
 <!-- 
