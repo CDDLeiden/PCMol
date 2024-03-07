@@ -37,13 +37,14 @@ import os.path as op
 _fscores = None
 
 
-def readFragmentScores(name='fpscores'):
+def readFragmentScores(name="fpscores"):
     import gzip
+
     global _fscores
     # generate the full path filename:
     if name == "fpscores":
         name = op.join(op.dirname(__file__), name)
-    data = pickle.load(gzip.open('%s.pkl.gz' % name))
+    data = pickle.load(gzip.open("%s.pkl.gz" % name))
     outDict = {}
     for i in data:
         for j in range(1, len(i)):
@@ -62,10 +63,11 @@ def SAScore(m):
         readFragmentScores()
 
     # fragment score
-    fp = rdMolDescriptors.GetMorganFingerprint(m,
-                                               2)  # <- 2 is the *radius* of the circular fingerprint
+    fp = rdMolDescriptors.GetMorganFingerprint(
+        m, 2
+    )  # <- 2 is the *radius* of the circular fingerprint
     fps = fp.GetNonzeroElements()
-    score1 = 0.
+    score1 = 0.0
     nf = 0
     for bitId, v in fps.items():
         nf += v
@@ -87,7 +89,7 @@ def SAScore(m):
     stereoPenalty = math.log10(nChiralCenters + 1)
     spiroPenalty = math.log10(nSpiro + 1)
     bridgePenalty = math.log10(nBridgeheads + 1)
-    macrocyclePenalty = 0.
+    macrocyclePenalty = 0.0
     # ---------------------------------------
     # This differs from the paper, which defines:
     #  macrocyclePenalty = math.log10(nMacrocycles+1)
@@ -95,27 +97,34 @@ def SAScore(m):
     if nMacrocycles > 0:
         macrocyclePenalty = math.log10(2)
 
-    score2 = 0. - sizePenalty - stereoPenalty - spiroPenalty - bridgePenalty - macrocyclePenalty
+    score2 = (
+        0.0
+        - sizePenalty
+        - stereoPenalty
+        - spiroPenalty
+        - bridgePenalty
+        - macrocyclePenalty
+    )
 
     # correction for the fingerprint density
     # not in the original publication, added in version 1.1
     # to make highly symmetrical molecules easier to synthetise
-    score3 = 0.
+    score3 = 0.0
     if nAtoms > len(fps):
-        score3 = math.log(float(nAtoms) / len(fps)) * .5
+        score3 = math.log(float(nAtoms) / len(fps)) * 0.5
 
     sascore = score1 + score2 + score3
 
     # need to transform "raw" value into scale between 1 and 10
     min = -4.0
     max = 2.5
-    sascore = 11. - (sascore - min + 1) / (max - min) * 9.
+    sascore = 11.0 - (sascore - min + 1) / (max - min) * 9.0
     # smooth the 10-end
-    if sascore > 8.:
-        sascore = 8. + math.log(sascore + 1. - 9.)
-    if sascore > 10.:
+    if sascore > 8.0:
+        sascore = 8.0 + math.log(sascore + 1.0 - 9.0)
+    if sascore > 10.0:
         sascore = 10.0
-    elif sascore < 1.:
+    elif sascore < 1.0:
         sascore = 1.0
 
     return sascore
@@ -136,12 +145,13 @@ def calculate_property(smiles, prop):
         aromatic_rings=CalcNumAromaticRings,
         num_rings=CalcNumRings,
         heavy_atoms=CalcNumHeavyAtoms,
-        sa=SAScore)
+        sa=SAScore,
+    )
 
     molprop = props_dict[prop]
     descs = [None for _ in smiles]
     for i, smi in enumerate(smiles):
-        if smi != '---':
+        if smi != "---":
             try:
                 mol = Chem.MolFromSmiles(smi)
                 descs[i] = molprop(mol)
@@ -149,51 +159,75 @@ def calculate_property(smiles, prop):
                 descs[i] = None
     return descs
 
+
 ### Functions for parallel apply (to avoid passing kwargs)
 def SA(smiles):
-    return calculate_property(smiles, 'sa')
+    return calculate_property(smiles, "sa")
+
 
 def logP(smiles):
-    return calculate_property(smiles, 'logP')
+    return calculate_property(smiles, "logP")
+
 
 def MW(smiles):
-    return calculate_property(smiles, 'MW')
+    return calculate_property(smiles, "MW")
+
 
 def HBA(smiles):
-    return calculate_property(smiles, 'HBA')
+    return calculate_property(smiles, "HBA")
+
 
 def HBD(smiles):
-    return calculate_property(smiles, 'HBD')
+    return calculate_property(smiles, "HBD")
+
 
 def qed(smiles):
-    return calculate_property(smiles, 'qed')
+    return calculate_property(smiles, "qed")
+
 
 def tpsa(smiles):
-    return calculate_property(smiles, 'tpsa')
+    return calculate_property(smiles, "tpsa")
+
 
 def rotatable_bonds(smiles):
-    return calculate_property(smiles, 'rotatable_bonds')
+    return calculate_property(smiles, "rotatable_bonds")
+
 
 def aromatic_rings(smiles):
-    return calculate_property(smiles, 'aromatic_rings')
+    return calculate_property(smiles, "aromatic_rings")
+
 
 def num_rings(smiles):
-    return calculate_property(smiles, 'num_rings')
+    return calculate_property(smiles, "num_rings")
+
 
 def heavy_atoms(smiles):
-    return calculate_property(smiles, 'heavy_atoms')
+    return calculate_property(smiles, "heavy_atoms")
 
 
-def add_mol_properties(df, column='SMILES', parallel=False, n_jobs=64, chunksize=1024):
+def add_mol_properties(df, column="SMILES", parallel=False, n_jobs=64, chunksize=1024):
     """
     Add molecular properties to a dataframe
     """
-    fns = [logP, MW, HBA, HBD, qed, tpsa, rotatable_bonds, aromatic_rings, num_rings, heavy_atoms]
+    fns = [
+        logP,
+        MW,
+        HBA,
+        HBD,
+        qed,
+        tpsa,
+        rotatable_bonds,
+        aromatic_rings,
+        num_rings,
+        heavy_atoms,
+    ]
 
     for prop in fns:
         print(prop)
         if parallel:
-            df[prop.__name__] = parallel_apply(prop, df, column=column, n_jobs=n_jobs, chunk_size=chunksize)
+            df[prop.__name__] = parallel_apply(
+                prop, df, column=column, n_jobs=n_jobs, chunk_size=chunksize
+            )
         else:
             df[prop.__name__] = df[column].apply(prop)
 

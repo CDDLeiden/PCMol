@@ -39,12 +39,18 @@ def generate_alternative_smiles(smiles, n_alternatives=10, n_attempts=500):
 All of the following functions are based on DrugEx codebase (https://github.com/CDDLeiden/DrugEx). 
 """
 
+
 def clean_mol(smile, is_deep=True):
     """Taken from dataset.py, modified to take/return a single smile"""
 
-    smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
-        .replace('[N]', 'N').replace('[B]', 'B') \
-        .replace('[2H]', '[H]').replace('[3H]', '[H]')
+    smile = (
+        smile.replace("[O]", "O")
+        .replace("[C]", "C")
+        .replace("[N]", "N")
+        .replace("[B]", "B")
+        .replace("[2H]", "[H]")
+        .replace("[3H]", "[H]")
+    )
     try:
         mol = Chem.MolFromSmiles(smile)
         if is_deep:
@@ -52,7 +58,7 @@ def clean_mol(smile, is_deep=True):
         smileR = Chem.MolToSmiles(mol, 0)
         smile = Chem.CanonSmiles(smileR)
     except:
-        print('Parsing Error:', smile)
+        print("Parsing Error:", smile)
         smile = None
     return smile
 
@@ -64,7 +70,7 @@ class VocSmiles:
     """
 
     def __init__(self, init_from_file=None, max_len=100):
-        self.control = ['_', 'GO']
+        self.control = ["_", "GO"]
         from_file = []
         if init_from_file:
             from_file = self.init_from_file(init_from_file)
@@ -90,31 +96,34 @@ class VocSmiles:
         for token in tensor:
             if not is_tk:
                 token = self.ix2tk[int(token)]
-            if token == 'EOS': break
-            if token in self.control: continue
+            if token == "EOS":
+                break
+            if token in self.control:
+                continue
             tokens.append(token)
         smiles = "".join(tokens)
-        smiles = smiles.replace('L', 'Cl').replace('R', 'Br')
+        smiles = smiles.replace("L", "Cl").replace("R", "Br")
         return smiles
 
     def split(self, smile):
         """Takes a SMILES and return a list of characters/tokens"""
-        regex = '(\[[^\[\]]{1,6}\])'
-        smile = smile.replace('Cl', 'L').replace('Br', 'R')
+        regex = "(\[[^\[\]]{1,6}\])"
+        smile = smile.replace("Cl", "L").replace("Br", "R")
         tokens = []
         for word in re.split(regex, smile):
-            if word == '' or word is None: continue
-            if word.startswith('['):
+            if word == "" or word is None:
+                continue
+            if word.startswith("["):
                 tokens.append(word)
             else:
                 for i, char in enumerate(word):
                     tokens.append(char)
-        return tokens + ['EOS']
+        return tokens + ["EOS"]
 
     def init_from_file(self, file):
         """Takes a file containing \n separated characters to initialize the vocabulary"""
         words = []
-        with open(file, 'r') as f:
+        with open(file, "r") as f:
             chars = f.read().split()
             words += sorted(set(chars))
         return words
@@ -124,13 +133,18 @@ class VocSmiles:
         for i, smile in enumerate(smiles):
             smile = clean_mol(smile)
             token = self.split(smile)
-            if prefix is not None: token = [prefix] + token
-            if len(token) > self.max_len: continue
-            if {'C', 'c'}.isdisjoint(token): continue
-            if not {'[Na]', '[Zn]'}.isdisjoint(token): continue
+            if prefix is not None:
+                token = [prefix] + token
+            if len(token) > self.max_len:
+                continue
+            if {"C", "c"}.isdisjoint(token):
+                continue
+            if not {"[Na]", "[Zn]"}.isdisjoint(token):
+                continue
             fps[i, :] = self.encode(token)
         return fps
-    
+
+
 def standardize_mol(mol):
     """
     Standardizes SMILES and removes fragments
@@ -144,8 +158,8 @@ def standardize_mol(mol):
     chooser = rdMolStandardize.LargestFragmentChooser()
     disconnector = rdMolStandardize.MetalDisconnector()
     normalizer = rdMolStandardize.Normalizer()
-    carbon = Chem.MolFromSmarts('[#6]')
-    salts = Chem.MolFromSmarts('[Na,Zn]')
+    carbon = Chem.MolFromSmarts("[#6]")
+    salts = Chem.MolFromSmarts("[Na,Zn]")
     try:
         mol = disconnector.Disconnect(mol)
         mol = normalizer.normalize(mol)
@@ -162,9 +176,10 @@ def standardize_mol(mol):
             return None
         return Chem.CanonSmiles(smileR)
     except:
-        print('Parsing Error:', Chem.MolToSmiles(mol))
+        print("Parsing Error:", Chem.MolToSmiles(mol))
 
     return None
+
 
 def check_smiles(smiles, frags=None):
     shape = (len(smiles), 1) if frags is None else (len(smiles), 2)
@@ -180,9 +195,13 @@ def check_smiles(smiles, frags=None):
 
 
 standard_grid = Chem.Draw.MolsToGridImage
+
+
 def interactive_grid(mols, *args, molsPerRow=10, **kwargs):
     import mols2grid
+
     return mols2grid.display(mols, *args, n_cols=molsPerRow, **kwargs)
+
 
 def smilesToGrid(smiles, *args, molsPerRow=10, **kwargs):
     mols = []
@@ -193,11 +212,12 @@ def smilesToGrid(smiles, *args, molsPerRow=10, **kwargs):
                 AllChem.Compute2DCoords(m)
                 mols.append(m)
             else:
-                raise Exception(f'Molecule empty for SMILES: {smile}')
+                raise Exception(f"Molecule empty for SMILES: {smile}")
         except Exception as exp:
             pass
-        
+
     return interactive_grid(mols, *args, molsPerRow=molsPerRow, **kwargs)
+
 
 def compare_gen_and_data(data_df, gen_df, target_ids, mols_per_row=5):
     """
@@ -216,11 +236,10 @@ def compare_gen_and_data(data_df, gen_df, target_ids, mols_per_row=5):
 
     gen_smiles, data_smiles = [], []
     for target_id in target_ids:
-        gen_smiles += gen_df[gen_df['target_id'] == target_id]['SMILES'].tolist()
-        data_smiles += data_df[data_df['target_id'] == target_id]['SMILES'].tolist()
+        gen_smiles += gen_df[gen_df["target_id"] == target_id]["SMILES"].tolist()
+        data_smiles += data_df[data_df["target_id"] == target_id]["SMILES"].tolist()
 
     gen_smiles = list(np.random.choice(gen_smiles, size=mols_per_row, replace=False))
     data_smiles = list(np.random.choice(data_smiles, size=mols_per_row, replace=False))
-    
-    return gen_smiles+data_smiles
 
+    return gen_smiles + data_smiles

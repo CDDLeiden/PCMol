@@ -30,11 +30,14 @@ class MeanPooling(nn.Module):
     Pooling layer for the regression heads
     Concatenates the last hidden state of the SMILES and AF2 embeddings
     """
+
     def __init__(self):
         super(MeanPooling, self).__init__()
 
     def forward(self, last_hidden_state, attn_mask):
-        input_mask_expanded = attn_mask.unsqueeze(-1).expand(last_hidden_state.size()).float()
+        input_mask_expanded = (
+            attn_mask.unsqueeze(-1).expand(last_hidden_state.size()).float()
+        )
         sum_embeddings = torch.sum(last_hidden_state * input_mask_expanded, 1)
         sum_mask = input_mask_expanded.sum(1)
         sum_mask = torch.clamp(sum_mask, min=1e-9)
@@ -47,6 +50,7 @@ class PositionwiseFeedForward(nn.Module):
     A two-layer feed-forward-layer module
     Used in the transformer encoder and decoder blocks
     """
+
     def __init__(self, d_input, d_hidden, regression=False):
         super().__init__()
         outgoing_nodes = 1 if regression else d_input
@@ -62,15 +66,16 @@ class PositionwiseFeedForward(nn.Module):
 class MLP(nn.Module):
     """
     A multi-layer perceptron module
-    Layer sizes are specified as a list of integers 
+    Layer sizes are specified as a list of integers
     (including input and output sizes)
     Used in the pchembl auxiliary loss
     """
+
     def __init__(self, layer_sizes, activation=nn.ReLU(), dropout=0.1):
         super(MLP, self).__init__()
         layers = []
         for i in range(len(layer_sizes) - 1):
-            layers.append(nn.Linear(layer_sizes[i], layer_sizes[i+1]))
+            layers.append(nn.Linear(layer_sizes[i], layer_sizes[i + 1]))
             if i < len(layer_sizes) - 2:
                 layers.append(activation)
                 layers.append(nn.Dropout(dropout))
@@ -85,6 +90,7 @@ class PreNorm(nn.Module):
     Pre-normalization layer (norm -> dropout -> layer)
     Improvement over the original paper
     """
+
     def __init__(self, size, dropout=0.1):
         super(PreNorm, self).__init__()
         self.norm = nn.LayerNorm(size)
@@ -119,13 +125,31 @@ class CustomDecoderBlock(nn.Module):
         self.smiles_attention = MultiheadAttention(d_model, n_heads, dropout=dropout)
         self.alphafold_attention = MultiheadAttention(d_model, n_heads, dropout=dropout)
         self.pos_ffn = PositionwiseFeedForward(d_model, d_feedforward)
-        self.norm = nn.ModuleList([PreNorm(d_model, dropout),
-                                   PreNorm(d_model, dropout),
-                                   PreNorm(d_model, dropout)])
+        self.norm = nn.ModuleList(
+            [
+                PreNorm(d_model, dropout),
+                PreNorm(d_model, dropout),
+                PreNorm(d_model, dropout),
+            ]
+        )
         self.attention_weights = []
 
     def forward(self, x, mem, key_padding_mask=None, encoder_mask=None, attn_mask=None):
-        x = self.norm[0](x, self.smiles_attention, key=x, value=x, key_padding_mask=key_padding_mask, attn_mask=attn_mask)
-        x = self.norm[1](x, self.alphafold_attention, True, key=mem, value=mem, key_padding_mask=encoder_mask)
+        x = self.norm[0](
+            x,
+            self.smiles_attention,
+            key=x,
+            value=x,
+            key_padding_mask=key_padding_mask,
+            attn_mask=attn_mask,
+        )
+        x = self.norm[1](
+            x,
+            self.alphafold_attention,
+            True,
+            key=mem,
+            value=mem,
+            key_padding_mask=encoder_mask,
+        )
         x = self.norm[2](x, self.pos_ffn)
         return x
