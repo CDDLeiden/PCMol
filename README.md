@@ -11,14 +11,6 @@ The model was trained using bioactivity data from the Papyrus<sup>[2]</sup> data
 
 ---
 
-## Paper & Authors
-
-The preprint is available on ChemRxiv:
-
-https://chemrxiv.org/engage/chemrxiv/article-details/65d47632e9ebbb4db9c63988
-
----
-
 ![alt text](assets/targets.png)
 
 <!-- ## Requirements
@@ -114,6 +106,29 @@ python pcmol/train.py --model default
 
 ---
 
+## Paper & Authors
+
+The paper is available on [ACS Journal of Chemical Information and Modeling](https://pubs.acs.org/doi/10.1021/acs.jcim.4c00309).
+
+### Citation
+
+```
+@article{doi:10.1021/acs.jcim.4c00309,
+author = {Bernatavicius, Andrius and Šícho, Martin and Janssen, Antonius P. A. and Hassen, Alan Kai and Preuss, Mike and van Westen, Gerard J. P.},
+title = {AlphaFold Meets De Novo Drug Design: Leveraging Structural Protein Information in Multitarget Molecular Generative Models},
+journal = {Journal of Chemical Information and Modeling},
+volume = {0},
+number = {0},
+pages = {null},
+year = {0},
+doi = {10.1021/acs.jcim.4c00309},
+    note ={PMID: 39475544},
+URL = {https://doi.org/10.1021/acs.jcim.4c00309},
+eprint = {https://doi.org/10.1021/acs.jcim.4c00309}
+}
+```
+
+---
 
 ## References
 
