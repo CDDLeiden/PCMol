@@ -110,7 +110,7 @@ python pcmol/train.py --model default
 
 The paper is available on [ACS Journal of Chemical Information and Modeling](https://pubs.acs.org/doi/10.1021/acs.jcim.4c00309).
 
-### Citation
+### Citation (BibTeX)
 
 ```
 @article{doi:10.1021/acs.jcim.4c00309,
