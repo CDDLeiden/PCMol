@@ -133,7 +133,7 @@ class Evaluator:
         
     def evaluate(self, list_of_smiles: list, target: str, superset: list=None,
                  calc_similarity: bool=False, metric: str='tanimoto', calc_molprops: bool=False,
-                 train_mode=False):
+                 train_mode=False, verbose=True):
         """
         Evaluate a list of SMILES strings
 

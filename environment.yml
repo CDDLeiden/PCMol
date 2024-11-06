@@ -1,17 +1,19 @@
 # Conda environment 
 
 name: pcmol
-
-# channels:
-  # - conda-forge
+channels:
+  - pytorch
 
 dependencies:
   - python=3.10
   - wget
   - pip
+  - ipykernel
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch::torchaudio
   - pip:
     - rdkit
-    - torch
     - tqdm
     - wandb 
     - papyrus-structure-pipeline

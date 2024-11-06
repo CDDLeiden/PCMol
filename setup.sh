@@ -29,4 +29,7 @@ printf "\n\nFor example, to generate SMILES for P29275 (A2AR_HUMAN), use the fol
 printf "\n\tpython pcmol/generate.py --target P29275"
 
 printf "\n\n*If no GPU is available, the generation process may take a long time. Additional flag must be used when generating without GPU:"
-printf "\n\tpython pcmol/generate.py --target P29275 --device cpu\n"
+printf "\n\tpython pcmol/generate.py --target P29275 --device cpu\n\n"
+printf "For more information, use the following command:"
+printf "\n\tpython pcmol/generate.py --help\n"
+printf "**************\n\n"

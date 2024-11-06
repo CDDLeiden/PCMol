@@ -222,8 +222,10 @@ class Runner:
             protein_id: str, 
             repeat:int = 1, 
             batch_size:int = 16, 
-            verbose:bool = False,
-            dev: str = None) -> pd.DataFrame:
+            verbose:bool = True,
+            dev: str = None,
+            visualize: bool = False,
+            ) -> pd.DataFrame:
         """
         Generates smiles for a target pid
 
@@ -260,10 +262,12 @@ class Runner:
 
         x = torch.LongTensor([[self.voc.tk2ix['GO']]] * batch_size).to(dev)
 
-        print(f'{"*"*80}\nGenerating smiles for target {protein_id}...')
+        if verbose:
+            print(f'{"*"*80}\nGenerating smiles for target {protein_id}...')
         smiles_list = []
         with torch.no_grad():
-            for i in tqdm(range(repeat)):
+            iterator = range(repeat) if not verbose else tqdm(range(repeat))
+            for i in iterator:
                 predictions, _ = net(x, af_emb=protein_embedding, train=False)
                 smiles = predictions.cpu().numpy()
                 for i in range(batch_size):
@@ -278,14 +282,20 @@ class Runner:
             print(f'Unique smiles: {len(set(smiles_list))} / {len(smiles_list)}')
 
         ## Save results
-        result_df = self.evaluator.evaluate(smiles_list, protein_id, calc_molprops=True)
+        result_df = self.evaluator.evaluate(smiles_list, protein_id, calc_molprops=True, verbose=verbose)
 
         ## Save dataframe
         path = os.path.join(dirs.RESULTS_DIR, self.model_id)
         os.makedirs(path, exist_ok=True)
         result_df.to_csv(os.path.join(path, f'results_{protein_id}.csv'))
-        print(f'\nSaved results to {path}')
-        print(result_df.head(repeat*batch_size))
+        if verbose:
+            print(f'\nSaved results to {path}')
+            print(result_df.head(repeat*batch_size))
+        if visualize:
+            from chemFilters.img_render import MolGridPlotter
+            plotter = MolGridPlotter(from_smi=True, size=(200, 200))
+            filtered = result_df[result_df.valid == True].index.values
+            plotter.mol_grid_png(filtered, n_cols=5)
 
         return result_df 
 

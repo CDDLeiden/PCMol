@@ -60,5 +60,5 @@ if __name__ == "__main__":
     for i, pid in enumerate(pids):
         print('\n', i, pid)
 
-        smiles_df = trainer.targetted_generation(protein_id=pid, batch_size=1, repeat=args.repeat, verbose=True, dev=args.device)
+        smiles_df = trainer.targetted_generation(protein_id=pid, batch_size=1, repeat=args.repeat, dev=args.device)
         

@@ -19,7 +19,7 @@ def load_voc(dataset_config: DatasetConfig):
     Loads the vocabulary from config (default: DatasetConfig initialized from config.py)
     """
     dataset_prefix = dataset_config.dataset_prefix
-    dataset_dir = dataset_config.dataset_dir
+    dataset_dir = os.path.join(dirs.DATA_DIR, 'training')
     voc_file = os.path.join(dataset_dir, f'{dataset_prefix}', 'voc_smiles.txt')
     return VocSmiles(voc_file, max_len=dataset_config.max_smiles_len)
 
@@ -32,10 +32,10 @@ def load_dataset(config: DatasetConfig=None, pre_load=False, load_all=True):
     if config is None:
         config = DatasetConfig()
     dataset_prefix = config.dataset_prefix
-    alphafold_embedding_dir = config.alphafold_dir
+    alphafold_embedding_dir = dirs.ALPHAFOLD_DIR
     embedding_type = config.embedding_type
     voc_smiles = load_voc(config)
-    dataset_dir = os.path.join(config.dataset_dir, f'{dataset_prefix}')
+    dataset_dir = os.path.join(dirs.DATA_DIR, 'training', f'{dataset_prefix}')
     if load_all:
         protein_list = None
     else:
