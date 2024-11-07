@@ -95,7 +95,7 @@ SMILES = model.targetted_generation(protein_id="P29275", batch_size=1, repeat=10
 
 ### Examples of molecules generated for different targets:
 
-A single pretrained PCMol model can generate molecules a few thousand of different targets.
+A single pretrained PCMol model can generate molecules for thousands of different targets.
 
 ![alt text](assets/targetted_generation.png)
 
