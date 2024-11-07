@@ -150,8 +150,9 @@ class Evaluator:
         """
         if train_mode:
             os.makedirs(self.eval_dir, exist_ok=True)
-            
-        print(f'    Evaluating {len(list_of_smiles)} SMILES strings...')
+        
+        if verbose:
+            print(f'    Evaluating {len(list_of_smiles)} SMILES strings...')
         result_df = pd.DataFrame(index=list_of_smiles)
         result_df['target'] = [target for _ in list_of_smiles]
         # result_df['SMILES'] = list_of_smiles
