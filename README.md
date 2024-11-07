@@ -90,8 +90,16 @@ To generate molecules for a particular target, the `Runner` class can be used di
 from pcmol import Runner
 
 model = Runner(model="XL")
-SMILES = model.targetted_generation(target="P29275", num_mols=100)
+SMILES = model.targetted_generation(protein_id="P29275", batch_size=1, repeat=10)
 ```
+
+### Examples of molecules generated for different targets:
+
+A single pretrained PCMol model can generate molecules for thousands of different targets.
+
+![alt text](assets/targetted_generation.png)
+
+More examples can be found in [notebooks/generate.ipynb](https://github.com/CDDLeiden/PCMol/blob/main/notebooks/generate.ipynb)
 
 ## List of supported protein targets
 
