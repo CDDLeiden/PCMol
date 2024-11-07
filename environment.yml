@@ -19,3 +19,4 @@ dependencies:
     - papyrus-structure-pipeline
     - pandas
     - matplotlib
+    - git+https://github.com/David-Araripe/chemFilters.git
