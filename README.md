@@ -5,7 +5,7 @@ A multi-target model for de novo molecule generation. By using the internal prot
 
 The model was trained using bioactivity data from the Papyrus<sup>[2]</sup> dataset (661,613 unique protein-ligand pairs in total, 6,249,253 after augmentation).
 
-**AlphaFold Embedding dataset:** [Zenodo](https://zenodo.org/records/10671261) | [GitHub](https://github.com/andriusbern/foldedPapyrus)
+**AlphaFold Embedding dataset:** [Zenodo](https://zenodo.org/records/10671261) 
 
 ---
 
