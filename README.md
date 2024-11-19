@@ -36,40 +36,23 @@ git clone https://github.com/CDDLeiden/pcmol.git && cd pcmol
 chmod +x setup.sh
 bash setup.sh
 ```
-
-### 2. Conda (alternative)
-The conda route requires the user to download the pretrained model manually (link below).
-
-```bash
-# Setting up a fresh conda environment
-git clone https://github.com/CDDLeiden/pcmol.git && cd pcmol
-conda env create -f environment.yml && conda activate pcmol
-python -m pip install -e .
-```
-<!-- 
-### 3. Docker 
-
-*Note: The docker image is currently not available.*
-
-The docker image contains all the prerequisites and the pretrained model.
-```bash
-# Pull the docker image
-docker pull andriusbern/pcmol:latest
-``` -->
-
-### Pretrained model
-
+<details>
+  <summary><b>2. Conda (alternative)</b></summary>
+  The conda route requires the user to download the pretrained model manually (link below).
+  
+  ```bash
+  # Setting up a fresh conda environment
+  git clone https://github.com/CDDLeiden/pcmol.git && cd pcmol
+  conda env create -f environment.yml && conda activate pcmol
+  python -m pip install -e .
+  ```
 **When not using the setup script, the pretrained model can be downloaded from [here](https://zenodo.org/records/10512870)[ (mirror)](https://surfdrive.surf.nl/files/index.php/s/T0wUBOmAEYYxxOo). It should then be placed in the `.../pcmol/data/models` folder.*
+
+ </details>
 
 ---
 
 # Generating molecules for a particular target
-<!-- 
-### 1. Docker
-```bash
-# Run the model on a single target using UniProt ID (generates 10 SMILES strings)
-docker run -it andriusbern/pcmol:latest python -m pcmol.generate --target P21819
-``` -->
 
 ### 1. Using a script (conda route) 
 ```bash
