@@ -7,7 +7,7 @@ from rdkit.Chem import Draw
 from rdkit.Chem.MolStandardize import rdMolStandardize
 from pcmol.utils.smiles_enumerator import SmilesEnumerator
 
-opts = Draw.DrawingOptions()
+opts = Draw.MolDrawOptions()
 Draw.SetComicMode(opts)
 
 
