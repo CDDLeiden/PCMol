@@ -30,3 +30,6 @@ pcmol.egg-info/
 **/__pycache__/
 **/*.pyc
 **/*.pyo
+
+test.ipynb
+existing.txt

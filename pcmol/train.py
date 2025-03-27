@@ -1,5 +1,5 @@
-from pcmol.runner import Runner
 from pcmol.config import RunnerConfig
+from pcmol.models.runner import Runner
 import wandb
 
 if __name__ == "__main__":
